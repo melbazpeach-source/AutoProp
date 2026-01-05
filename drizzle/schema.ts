@@ -298,7 +298,7 @@ export type InsertDailySummary = typeof dailySummaries.$inferInsert;
  */
 export const integrationSettings = mysqlTable("integrationSettings", {
   id: int("id").autoincrement().primaryKey(),
-  service: mysqlEnum("service", ["palace", "outlook", "twilio", "whatsapp"]).notNull().unique(),
+  service: mysqlEnum("service", ["palace", "outlook", "vonage", "slack", "n8n", "claude", "chatgpt", "gemini"]).notNull().unique(),
   enabled: boolean("enabled").default(false),
   configData: text("configData"), // JSON for API keys, endpoints, etc. (encrypted)
   lastSyncAt: timestamp("lastSyncAt"),

@@ -440,7 +440,7 @@ export const appRouter = router({
 
     configure: protectedProcedure
       .input(z.object({
-        service: z.enum(['palace', 'outlook', 'twilio', 'whatsapp']),
+        service: z.enum(['palace', 'outlook', 'vonage', 'slack', 'n8n', 'claude', 'chatgpt', 'gemini']),
         enabled: z.boolean(),
         configData: z.string(),
       }))

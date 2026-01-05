@@ -106,3 +106,36 @@
 - [ ] Create user documentation
 - [ ] Create API integration guide
 - [ ] Save final checkpoint
+
+
+## Phase 13: External Integrations Configuration (In Progress)
+- [x] Create integration configuration UI with secure credential management
+- [x] Build Palace.com API configuration form
+- [x] Build Outlook/Microsoft Graph configuration form
+- [x] Add integration status indicators
+- [x] Create manual sync triggers for each integration
+- [ ] Note: SMS/WhatsApp/Phone - Consider NZ-compatible providers (Vonage, local NZ SMS gateways) for future implementation
+
+
+## Phase 14: Vonage & Slack Integration
+- [x] Replace Twilio with Vonage SMS/WhatsApp integration
+- [x] Build Vonage API connector for SMS
+- [x] Build Vonage WhatsApp Business API integration
+- [x] Create Slack integration for team notifications
+- [x] Add Vonage configuration form to Integrations page
+- [x] Add Slack configuration form to Integrations page
+- [x] Update communications service to use Vonage
+- [ ] Test SMS and WhatsApp delivery via Vonage
+
+
+## Phase 15: n8n & AI Provider Integrations
+- [x] Update database schema to include n8n, claude, chatgpt, gemini services
+- [x] Create n8n webhook integration for workflow automation
+- [x] Create Claude (Anthropic) API integration
+- [x] Create ChatGPT (OpenAI) API integration
+- [x] Create Gemini (Google) API integration
+- [x] Add n8n configuration form to Integrations page
+- [x] Add Claude configuration form to Integrations page
+- [x] Add ChatGPT configuration form to Integrations page
+- [x] Add Gemini configuration form to Integrations page
+- [ ] Create AI service selector for different tasks (email drafting, breach letters, summaries)

@@ -3,7 +3,8 @@
  * 
  * Integrates with:
  * - Microsoft Graph API for Outlook email
- * - Twilio for SMS, WhatsApp, and Voice/Voicemail
+ * - Vonage (formerly Nexmo) for SMS and WhatsApp Business API
+ * - Slack for team notifications
  * 
  * Provides auto-responder functionality across all channels
  */
@@ -147,129 +148,171 @@ export class OutlookService {
 }
 
 // ============================================================================
-// Twilio Integration (SMS, WhatsApp, Voice)
+// Vonage Integration (SMS & WhatsApp Business API)
 // ============================================================================
 
-export interface TwilioConfig {
-  accountSid: string;
-  authToken: string;
-  phoneNumber: string; // Twilio phone number
-  whatsappNumber?: string; // Twilio WhatsApp number (format: whatsapp:+1234567890)
+export interface VonageConfig {
+  apiKey: string;
+  apiSecret: string;
+  smsFrom: string; // Sender ID for SMS (e.g., "PropertyMgmt")
+  whatsappNumber?: string; // WhatsApp Business number
 }
 
-export class TwilioService {
-  private config: TwilioConfig;
+export class VonageService {
+  private config: VonageConfig;
   private client: AxiosInstance;
 
-  constructor(config: TwilioConfig) {
+  constructor(config: VonageConfig) {
     this.config = config;
     
-    const auth = Buffer.from(`${config.accountSid}:${config.authToken}`).toString('base64');
     this.client = axios.create({
-      baseURL: `https://api.twilio.com/2010-04-01/Accounts/${config.accountSid}`,
       timeout: 30000,
-      headers: {
-        'Authorization': `Basic ${auth}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
     });
   }
 
-  async sendSMS(to: string, body: string) {
+  async sendSMS(to: string, text: string) {
     try {
-      const params = new URLSearchParams();
-      params.append('To', to);
-      params.append('From', this.config.phoneNumber);
-      params.append('Body', body);
+      const response = await axios.post(
+        'https://rest.nexmo.com/sms/json',
+        {
+          from: this.config.smsFrom,
+          to: to.replace(/\D/g, ''), // Remove non-digits
+          text,
+          api_key: this.config.apiKey,
+          api_secret: this.config.apiSecret,
+        }
+      );
 
-      const response = await this.client.post('/Messages.json', params);
-      console.log(`[Twilio] SMS sent to ${to}`);
-      return response.data;
+      if (response.data.messages && response.data.messages[0].status === '0') {
+        console.log(`[Vonage] SMS sent to ${to}`);
+        return response.data.messages[0];
+      } else {
+        const errorText = response.data.messages?.[0]?.['error-text'] || 'Unknown error';
+        console.error(`[Vonage] SMS send failed: ${errorText}`);
+        throw new Error(errorText);
+      }
     } catch (error) {
-      console.error('[Twilio] Failed to send SMS:', error);
+      console.error('[Vonage] Failed to send SMS:', error);
       throw error;
     }
   }
 
-  async sendWhatsApp(to: string, body: string) {
+  async sendWhatsApp(to: string, text: string) {
     try {
       if (!this.config.whatsappNumber) {
         throw new Error('WhatsApp number not configured');
       }
 
-      const params = new URLSearchParams();
-      params.append('To', `whatsapp:${to}`);
-      params.append('From', this.config.whatsappNumber);
-      params.append('Body', body);
+      const response = await axios.post(
+        'https://messages-sandbox.nexmo.com/v1/messages',
+        {
+          from: this.config.whatsappNumber,
+          to,
+          message_type: 'text',
+          text,
+          channel: 'whatsapp',
+        },
+        {
+          auth: {
+            username: this.config.apiKey,
+            password: this.config.apiSecret,
+          },
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const response = await this.client.post('/Messages.json', params);
-      console.log(`[Twilio] WhatsApp message sent to ${to}`);
+      console.log(`[Vonage] WhatsApp message sent to ${to}`);
       return response.data;
     } catch (error) {
-      console.error('[Twilio] Failed to send WhatsApp message:', error);
-      throw error;
-    }
-  }
-
-  async makeCall(to: string, twimlUrl: string) {
-    try {
-      const params = new URLSearchParams();
-      params.append('To', to);
-      params.append('From', this.config.phoneNumber);
-      params.append('Url', twimlUrl);
-
-      const response = await this.client.post('/Calls.json', params);
-      console.log(`[Twilio] Call initiated to ${to}`);
-      return response.data;
-    } catch (error) {
-      console.error('[Twilio] Failed to make call:', error);
+      console.error('[Vonage] Failed to send WhatsApp message:', error);
       throw error;
     }
   }
 
   async fetchRecentMessages(limit: number = 50) {
+    // Note: Vonage doesn't have a direct "fetch messages" API like Twilio
+    // Messages are typically received via webhooks
+    // This would require storing messages in your database when webhooks are received
+    console.warn('[Vonage] Message fetching not directly supported - use webhooks');
+    return [];
+  }
+}
+
+// ============================================================================
+// Slack Integration for Team Notifications
+// ============================================================================
+
+export interface SlackConfig {
+  botToken: string;
+  channelId: string;
+  urgentChannelId?: string; // Optional separate channel for urgent notifications
+}
+
+export class SlackService {
+  private config: SlackConfig;
+  private client: AxiosInstance;
+
+  constructor(config: SlackConfig) {
+    this.config = config;
+    
+    this.client = axios.create({
+      baseURL: 'https://slack.com/api',
+      timeout: 30000,
+      headers: {
+        'Authorization': `Bearer ${config.botToken}`,
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  async postMessage(text: string, urgent: boolean = false) {
     try {
-      const response = await this.client.get('/Messages.json', {
-        params: {
-          PageSize: limit,
-        },
+      const channel = urgent && this.config.urgentChannelId 
+        ? this.config.urgentChannelId 
+        : this.config.channelId;
+
+      const formattedText = urgent ? `🚨 *URGENT* 🚨\n${text}` : text;
+
+      const response = await this.client.post('/chat.postMessage', {
+        channel,
+        text: formattedText,
+        mrkdwn: true,
       });
-      return response.data.messages || [];
+
+      if (response.data.ok) {
+        console.log(`[Slack] Message posted to ${channel}`);
+        return response.data;
+      } else {
+        throw new Error(response.data.error || 'Unknown Slack API error');
+      }
     } catch (error) {
-      console.error('[Twilio] Failed to fetch messages:', error);
-      return [];
+      console.error('[Slack] Failed to post message:', error);
+      throw error;
     }
   }
 
-  async fetchRecentCalls(limit: number = 50) {
+  async postRichMessage(blocks: any[], urgent: boolean = false) {
     try {
-      const response = await this.client.get('/Calls.json', {
-        params: {
-          PageSize: limit,
-        },
-      });
-      return response.data.calls || [];
-    } catch (error) {
-      console.error('[Twilio] Failed to fetch calls:', error);
-      return [];
-    }
-  }
+      const channel = urgent && this.config.urgentChannelId 
+        ? this.config.urgentChannelId 
+        : this.config.channelId;
 
-  async getVoicemailRecording(recordingSid: string): Promise<Buffer | null> {
-    try {
-      const response = await axios.get(
-        `https://api.twilio.com/2010-04-01/Accounts/${this.config.accountSid}/Recordings/${recordingSid}.mp3`,
-        {
-          responseType: 'arraybuffer',
-          headers: {
-            'Authorization': `Basic ${Buffer.from(`${this.config.accountSid}:${this.config.authToken}`).toString('base64')}`,
-          },
-        }
-      );
-      return Buffer.from(response.data);
+      const response = await this.client.post('/chat.postMessage', {
+        channel,
+        blocks,
+      });
+
+      if (response.data.ok) {
+        console.log(`[Slack] Rich message posted to ${channel}`);
+        return response.data;
+      } else {
+        throw new Error(response.data.error || 'Unknown Slack API error');
+      }
     } catch (error) {
-      console.error('[Twilio] Failed to fetch voicemail recording:', error);
-      return null;
+      console.error('[Slack] Failed to post rich message:', error);
+      throw error;
     }
   }
 }
@@ -283,18 +326,17 @@ export interface AutoResponderConfig {
   emailTemplate: string;
   smsTemplate: string;
   whatsappTemplate: string;
-  voiceTemplate: string;
 }
 
 export class CommunicationsService {
   private outlookService?: OutlookService;
-  private twilioService?: TwilioService;
+  private vonageService?: VonageService;
+  private slackService?: SlackService;
   private autoResponderConfig: AutoResponderConfig = {
     enabled: true,
     emailTemplate: 'Thank you for contacting us. We have received your message and will respond within 24 hours.',
     smsTemplate: 'Thank you for your message. We will get back to you soon.',
     whatsappTemplate: 'Thank you for your message. We will get back to you soon.',
-    voiceTemplate: 'Thank you for your call. We will return your call as soon as possible.',
   };
 
   async initialize() {
@@ -310,16 +352,28 @@ export class CommunicationsService {
       console.error('[Communications] Failed to initialize Outlook:', error);
     }
 
-    // Initialize Twilio
+    // Initialize Vonage
     try {
-      const twilioSettings = await getIntegrationSetting('twilio');
-      if (twilioSettings && twilioSettings.enabled && twilioSettings.configData) {
-        const config: TwilioConfig = JSON.parse(twilioSettings.configData);
-        this.twilioService = new TwilioService(config);
-        console.log('[Communications] Twilio service initialized');
+      const vonageSettings = await getIntegrationSetting('vonage');
+      if (vonageSettings && vonageSettings.enabled && vonageSettings.configData) {
+        const config: VonageConfig = JSON.parse(vonageSettings.configData);
+        this.vonageService = new VonageService(config);
+        console.log('[Communications] Vonage service initialized');
       }
     } catch (error) {
-      console.error('[Communications] Failed to initialize Twilio:', error);
+      console.error('[Communications] Failed to initialize Vonage:', error);
+    }
+
+    // Initialize Slack
+    try {
+      const slackSettings = await getIntegrationSetting('slack');
+      if (slackSettings && slackSettings.enabled && slackSettings.configData) {
+        const config: SlackConfig = JSON.parse(slackSettings.configData);
+        this.slackService = new SlackService(config);
+        console.log('[Communications] Slack service initialized');
+      }
+    } catch (error) {
+      console.error('[Communications] Failed to initialize Slack:', error);
     }
   }
 
@@ -333,7 +387,7 @@ export class CommunicationsService {
       const body = email.body?.content || '';
 
       // Log communication
-      const commResult = await createCommunication({
+      await createCommunication({
         channel: 'email',
         direction: 'inbound',
         fromAddress: fromEmail,
@@ -355,9 +409,14 @@ export class CommunicationsService {
       // Send auto-response
       if (this.autoResponderConfig.enabled && this.outlookService) {
         await this.outlookService.replyToEmail(email.id, this.autoResponderConfig.emailTemplate);
-        
-        // Update communication record
-        // Note: In production, you'd update the communication record with auto-response info
+      }
+
+      // Notify team via Slack
+      if (this.slackService) {
+        await this.slackService.postMessage(
+          `📧 New email from *${fromEmail}*\nSubject: ${subject}`,
+          false
+        );
       }
 
       console.log(`[Communications] Processed inbound email from ${fromEmail}`);
@@ -371,17 +430,17 @@ export class CommunicationsService {
    */
   async processInboundSMS(message: any) {
     try {
-      const from = message.from || message.From;
-      const body = message.body || message.Body;
+      const from = message.msisdn || message.from;
+      const text = message.text || message.body;
 
       // Log communication
       await createCommunication({
         channel: 'sms',
         direction: 'inbound',
         fromAddress: from,
-        toAddress: message.to || message.To,
-        body,
-        externalId: message.sid || message.MessageSid,
+        toAddress: message.to,
+        body: text,
+        externalId: message.messageId || message['message-id'],
       });
 
       // Create ticket
@@ -390,12 +449,20 @@ export class CommunicationsService {
         type: 'inquiry',
         status: 'open',
         subject: `SMS from ${from}`,
-        description: body,
+        description: text,
       });
 
       // Send auto-response
-      if (this.autoResponderConfig.enabled && this.twilioService) {
-        await this.twilioService.sendSMS(from, this.autoResponderConfig.smsTemplate);
+      if (this.autoResponderConfig.enabled && this.vonageService) {
+        await this.vonageService.sendSMS(from, this.autoResponderConfig.smsTemplate);
+      }
+
+      // Notify team via Slack
+      if (this.slackService) {
+        await this.slackService.postMessage(
+          `📱 New SMS from *${from}*\n${text}`,
+          false
+        );
       }
 
       console.log(`[Communications] Processed inbound SMS from ${from}`);
@@ -409,17 +476,17 @@ export class CommunicationsService {
    */
   async processInboundWhatsApp(message: any) {
     try {
-      const from = (message.from || message.From).replace('whatsapp:', '');
-      const body = message.body || message.Body;
+      const from = message.from;
+      const text = message.message?.content?.text || message.text;
 
       // Log communication
       await createCommunication({
         channel: 'whatsapp',
         direction: 'inbound',
         fromAddress: from,
-        toAddress: (message.to || message.To).replace('whatsapp:', ''),
-        body,
-        externalId: message.sid || message.MessageSid,
+        toAddress: message.to,
+        body: text,
+        externalId: message.message_uuid || message.messageId,
       });
 
       // Create ticket
@@ -428,67 +495,25 @@ export class CommunicationsService {
         type: 'inquiry',
         status: 'open',
         subject: `WhatsApp from ${from}`,
-        description: body,
+        description: text,
       });
 
       // Send auto-response
-      if (this.autoResponderConfig.enabled && this.twilioService) {
-        await this.twilioService.sendWhatsApp(from, this.autoResponderConfig.whatsappTemplate);
+      if (this.autoResponderConfig.enabled && this.vonageService) {
+        await this.vonageService.sendWhatsApp(from, this.autoResponderConfig.whatsappTemplate);
+      }
+
+      // Notify team via Slack
+      if (this.slackService) {
+        await this.slackService.postMessage(
+          `💬 New WhatsApp from *${from}*\n${text}`,
+          false
+        );
       }
 
       console.log(`[Communications] Processed inbound WhatsApp from ${from}`);
     } catch (error) {
       console.error('[Communications] Failed to process inbound WhatsApp:', error);
-    }
-  }
-
-  /**
-   * Process inbound call/voicemail and create ticket
-   */
-  async processInboundCall(call: any) {
-    try {
-      const from = call.from || call.From;
-      const status = call.status || call.CallStatus;
-
-      // Check if voicemail was left
-      let voicemailUrl: string | undefined;
-      if (call.recordingSid) {
-        const recording = await this.twilioService?.getVoicemailRecording(call.recordingSid);
-        if (recording) {
-          // Upload to S3
-          const { url } = await storagePut(
-            `voicemails/${call.recordingSid}.mp3`,
-            recording,
-            'audio/mpeg'
-          );
-          voicemailUrl = url;
-        }
-      }
-
-      // Log communication
-      await createCommunication({
-        channel: status === 'completed' ? 'phone' : 'voicemail',
-        direction: 'inbound',
-        fromAddress: from,
-        toAddress: call.to || call.To,
-        body: voicemailUrl ? `Voicemail recording: ${voicemailUrl}` : 'Missed call',
-        externalId: call.sid || call.CallSid,
-        attachmentUrls: voicemailUrl ? JSON.stringify([voicemailUrl]) : undefined,
-      });
-
-      // Create ticket
-      await createTicket({
-        ticketNumber: `CALL-${Date.now()}`,
-        type: 'inquiry',
-        status: 'open',
-        subject: `${status === 'completed' ? 'Call' : 'Missed call'} from ${from}`,
-        description: voicemailUrl ? `Voicemail left. Recording: ${voicemailUrl}` : 'No voicemail left',
-      });
-
-      // Note: Auto-response for calls would be handled via TwiML in the webhook
-      console.log(`[Communications] Processed inbound call from ${from}`);
-    } catch (error) {
-      console.error('[Communications] Failed to process inbound call:', error);
     }
   }
 
@@ -503,11 +528,9 @@ export class CommunicationsService {
     const success = await this.outlookService.sendEmail(to, subject, body, attachments);
     
     if (success) {
-      // Log communication
       await createCommunication({
         channel: 'email',
         direction: 'outbound',
-        fromAddress: this.outlookService['config'].userEmail,
         toAddress: to,
         subject,
         body,
@@ -520,21 +543,19 @@ export class CommunicationsService {
   /**
    * Send outbound SMS
    */
-  async sendSMS(to: string, body: string) {
-    if (!this.twilioService) {
-      throw new Error('Twilio service not initialized');
+  async sendSMS(to: string, text: string) {
+    if (!this.vonageService) {
+      throw new Error('Vonage service not initialized');
     }
 
-    const result = await this.twilioService.sendSMS(to, body);
+    const result = await this.vonageService.sendSMS(to, text);
     
-    // Log communication
     await createCommunication({
       channel: 'sms',
       direction: 'outbound',
-      fromAddress: this.twilioService['config'].phoneNumber,
       toAddress: to,
-      body,
-      externalId: result.sid,
+      body: text,
+      externalId: result['message-id'],
     });
 
     return result;
@@ -543,24 +564,40 @@ export class CommunicationsService {
   /**
    * Send outbound WhatsApp message
    */
-  async sendWhatsApp(to: string, body: string) {
-    if (!this.twilioService) {
-      throw new Error('Twilio service not initialized');
+  async sendWhatsApp(to: string, text: string) {
+    if (!this.vonageService) {
+      throw new Error('Vonage service not initialized');
     }
 
-    const result = await this.twilioService.sendWhatsApp(to, body);
+    const result = await this.vonageService.sendWhatsApp(to, text);
     
-    // Log communication
     await createCommunication({
       channel: 'whatsapp',
       direction: 'outbound',
-      fromAddress: this.twilioService['config'].whatsappNumber || '',
       toAddress: to,
-      body,
-      externalId: result.sid,
+      body: text,
+      externalId: result.message_uuid,
     });
 
     return result;
+  }
+
+  /**
+   * Send Slack notification to team
+   */
+  async notifyTeam(message: string, urgent: boolean = false) {
+    if (!this.slackService) {
+      console.warn('[Communications] Slack not configured, notification not sent');
+      return false;
+    }
+
+    try {
+      await this.slackService.postMessage(message, urgent);
+      return true;
+    } catch (error) {
+      console.error('[Communications] Failed to send Slack notification:', error);
+      return false;
+    }
   }
 }
 
