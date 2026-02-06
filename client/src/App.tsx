@@ -6,6 +6,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import DashboardLayout from "./components/DashboardLayout";
 import Home from "./pages/Home";
+import Approvals from "./pages/Approvals";
 import Properties from "./pages/Properties";
 import Tenants from "./pages/Tenants";
 import Tickets from "./pages/Tickets";
@@ -100,7 +101,12 @@ function Router() {
         </DashboardLayout>
       </Route>
       
-      <Route path={"/404"} component={NotFound} />
+      <Route path={"/approvals"}>
+        <DashboardLayout>
+          <Approvals />
+        </DashboardLayout>
+      </Route>
+      
       <Route component={NotFound} />
     </Switch>
   );

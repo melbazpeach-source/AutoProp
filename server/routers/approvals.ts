@@ -1,0 +1,93 @@
+import { z } from 'zod';
+import { protectedProcedure, router } from '../_core/trpc';
+import { getDb } from '../db';
+import { communications } from '../../drizzle/schema';
+import { eq } from 'drizzle-orm';
+import { CommunicationsService } from '../communications-service';
+
+export const approvalsRouter = router({
+  getPending: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return [];
+    
+    return await db
+      .select()
+      .from(communications)
+      .where(eq(communications.status, 'pending_approval'));
+  }),
+
+  approve: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      const [comm] = await db
+        .select()
+        .from(communications)
+        .where(eq(communications.id, input.id));
+      
+      if (!comm) throw new Error('Communication not found');
+      
+      // Update to approved
+      await db
+        .update(communications)
+        .set({
+          status: 'approved',
+          approvedBy: ctx.user.id,
+          approvedAt: new Date(),
+        })
+        .where(eq(communications.id, input.id));
+      
+      // Send via appropriate channel
+      try {
+        const commService = new CommunicationsService();
+        await commService.initialize();
+        
+        if (comm.channel === 'email') {
+          await commService.sendEmail(
+            comm.toAddress!,
+            comm.subject || '',
+            comm.body || ''
+          );
+        } else if (comm.channel === 'sms') {
+          await commService.sendSMS(
+            comm.toAddress!,
+            comm.body || ''
+          );
+        }
+        
+        // Mark as sent
+        await db
+          .update(communications)
+          .set({
+            status: 'sent',
+            sentAt: new Date(),
+          })
+          .where(eq(communications.id, input.id));
+        
+        return { success: true };
+      } catch (error) {
+        return { success: false, error: 'Failed to send email' };
+      }
+    }),
+
+  reject: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      reason: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      await db
+        .update(communications)
+        .set({
+          status: 'cancelled',
+        })
+        .where(eq(communications.id, input.id));
+      
+      return { success: true };
+    }),
+});

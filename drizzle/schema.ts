@@ -104,6 +104,10 @@ export const communications = mysqlTable("communications", {
   tenantId: int("tenantId").references(() => tenants.id),
   propertyId: int("propertyId").references(() => properties.id),
   ticketId: int("ticketId").references(() => tickets.id),
+  status: mysqlEnum("status", ["draft", "pending_approval", "approved", "sent", "failed", "cancelled"]).default("draft"),
+  approvedBy: int("approvedBy").references(() => users.id),
+  approvedAt: timestamp("approvedAt"),
+  sentAt: timestamp("sentAt"),
   autoResponded: boolean("autoResponded").default(false),
   autoResponseSentAt: timestamp("autoResponseSentAt"),
   externalId: varchar("externalId", { length: 256 }), // Message ID from external system
@@ -366,3 +370,31 @@ export const integrationSettings = mysqlTable("integrationSettings", {
 
 export type IntegrationSetting = typeof integrationSettings.$inferSelect;
 export type InsertIntegrationSetting = typeof integrationSettings.$inferInsert;
+
+/**
+ * Pending communications requiring HITL approval before sending
+ */
+export const pendingCommunications = mysqlTable('pendingCommunications', {
+  id: int('id').autoincrement().primaryKey(),
+  type: mysqlEnum('type', ['breach_letter', 'email', 'maintenance_confirmation', 'viewing_confirmation']).notNull(),
+  recipientType: mysqlEnum('recipientType', ['tenant', 'contractor', 'owner']).notNull(),
+  recipientId: int('recipientId').notNull(),
+  recipientEmail: varchar('recipientEmail', { length: 320 }),
+  recipientName: text('recipientName'),
+  subject: text('subject').notNull(),
+  body: text('body').notNull(),
+  status: mysqlEnum('status', ['pending', 'approved', 'rejected', 'sent']).default('pending').notNull(),
+  relatedEntityType: varchar('relatedEntityType', { length: 50 }),
+  relatedEntityId: int('relatedEntityId'),
+  approvedBy: int('approvedBy'),
+  approvedAt: timestamp('approvedAt'),
+  rejectedBy: int('rejectedBy'),
+  rejectedAt: timestamp('rejectedAt'),
+  rejectionReason: text('rejectionReason'),
+  sentAt: timestamp('sentAt'),
+  createdAt: timestamp('createdAt').defaultNow().notNull(),
+  updatedAt: timestamp('updatedAt').defaultNow().onUpdateNow().notNull(),
+});
+
+export type PendingCommunication = typeof pendingCommunications.$inferSelect;
+export type InsertPendingCommunication = typeof pendingCommunications.$inferInsert;

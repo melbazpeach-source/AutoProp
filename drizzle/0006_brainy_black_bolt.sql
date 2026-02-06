@@ -1,0 +1,22 @@
+CREATE TABLE `pendingCommunications` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`type` enum('breach_letter','email','maintenance_confirmation','viewing_confirmation') NOT NULL,
+	`recipientType` enum('tenant','contractor','owner') NOT NULL,
+	`recipientId` int NOT NULL,
+	`recipientEmail` varchar(320),
+	`recipientName` text,
+	`subject` text NOT NULL,
+	`body` text NOT NULL,
+	`status` enum('pending','approved','rejected','sent') NOT NULL DEFAULT 'pending',
+	`relatedEntityType` varchar(50),
+	`relatedEntityId` int,
+	`approvedBy` int,
+	`approvedAt` timestamp,
+	`rejectedBy` int,
+	`rejectedAt` timestamp,
+	`rejectionReason` text,
+	`sentAt` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `pendingCommunications_id` PRIMARY KEY(`id`)
+);

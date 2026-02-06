@@ -179,3 +179,19 @@
 - [ ] Implement approve/reject/edit functionality
 - [ ] Add preview for each communication type
 - [ ] Wire up approved communications to actual sending
+
+
+## HITL Approval Queue & Reporting (In Progress)
+- [x] Add status and approval fields to communications table
+- [x] Build approval router with tRPC endpoints
+- [x] Create Approvals page with pending communications list
+- [x] Add preview modal for each communication
+- [x] Add approve/reject functionality
+- [x] Wire up Outlook email sending on approval
+- [x] Wire up Vonage SMS sending on approval
+- [ ] Add edit functionality for communication drafts
+- [ ] Test actual email sending with Outlook credentials
+- [ ] Test actual SMS sending with Vonage credentials
+- [ ] Create activity reports (PDF/Excel export)
+- [ ] Add daily/weekly/monthly report generation
+- [ ] Build compliance audit trail export
