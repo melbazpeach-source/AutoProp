@@ -245,4 +245,30 @@ export const approvalsRouter = router({
       .from(communications)
       .where(eq(communications.status, 'scheduled'));
   }),
+
+  create: protectedProcedure
+    .input(z.object({
+      channel: z.enum(['email', 'sms', 'whatsapp']),
+      toAddress: z.string(),
+      subject: z.string().optional(),
+      body: z.string(),
+    }))
+    .mutation(async ({ input, ctx }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      await db
+        .insert(communications)
+        .values({
+          channel: input.channel,
+          direction: 'outbound',
+          toAddress: input.toAddress,
+          subject: input.subject,
+          body: input.body,
+          status: 'pending_approval',
+          createdAt: new Date(),
+        });
+      
+      return { success: true };
+    }),
 });

@@ -243,3 +243,15 @@
 - [ ] Implement scheduled send processor
 - [ ] Show scheduled communications in separate section
 - [ ] Add ability to cancel scheduled sends
+
+
+## Use Template in Approval Queue
+- [x] Add "Use Template" button to approval queue header
+- [x] Create template selection dialog
+- [x] Display available templates grouped by category
+- [x] Add template preview in selection dialog
+- [x] Integrate template application with communication creation
+- [x] Support variable substitution when applying templates
+- [x] Add "Create from Template" workflow
+- [x] Test template selection and application
+- [x] Fix bug with template variables display

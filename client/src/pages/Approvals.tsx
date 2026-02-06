@@ -25,8 +25,13 @@ export default function Approvals() {
   const [showSchedule, setShowSchedule] = useState(false);
   const [scheduledDate, setScheduledDate] = useState('');
   const [scheduledTime, setScheduledTime] = useState('');
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [newCommChannel, setNewCommChannel] = useState<'email' | 'sms' | 'whatsapp'>('email');
+  const [newCommRecipient, setNewCommRecipient] = useState('');
 
   const { data: pending, refetch } = trpc.approvals.getPending.useQuery();
+  const { data: templates } = trpc.templates.list.useQuery();
   const approveMutation = trpc.approvals.approve.useMutation({
     onSuccess: () => {
       toast.success('Communication approved and sent');
@@ -77,6 +82,16 @@ export default function Approvals() {
       setScheduledTime('');
     },
   });
+  const createMutation = trpc.approvals.create.useMutation({
+    onSuccess: () => {
+      toast.success('Communication created and added to approval queue');
+      refetch();
+      setShowEdit(false);
+      setEditSubject('');
+      setEditBody('');
+      setNewCommRecipient('');
+    },
+  });
 
   const toggleSelection = (id: number) => {
     setSelectedIds(prev => 
@@ -122,6 +137,15 @@ export default function Approvals() {
               Review and approve communications before sending
             </p>
           </div>
+          {selectedIds.length === 0 && (
+            <Button
+              variant="default"
+              onClick={() => setShowTemplateSelector(true)}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Use Template
+            </Button>
+          )}
           {selectedIds.length > 0 && (
             <div className="flex items-center gap-3">
               <span className="text-sm text-muted-foreground">
@@ -328,13 +352,39 @@ export default function Approvals() {
       <Dialog open={showEdit} onOpenChange={setShowEdit}>
         <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Edit Communication</DialogTitle>
+            <DialogTitle>{selectedComm ? 'Edit Communication' : 'Create Communication'}</DialogTitle>
             <DialogDescription>
-              Modify the subject and body before approving
+              {selectedComm ? 'Modify the subject and body before approving' : 'Fill in the details for the new communication'}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedComm?.channel === 'email' && (
+            {!selectedComm && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="new-channel">Channel</Label>
+                  <select
+                    id="new-channel"
+                    value={newCommChannel}
+                    onChange={(e) => setNewCommChannel(e.target.value as 'email' | 'sms' | 'whatsapp')}
+                    className="w-full px-3 py-2 border rounded-md"
+                  >
+                    <option value="email">Email</option>
+                    <option value="sms">SMS</option>
+                    <option value="whatsapp">WhatsApp</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="new-recipient">Recipient</Label>
+                  <Input
+                    id="new-recipient"
+                    value={newCommRecipient}
+                    onChange={(e) => setNewCommRecipient(e.target.value)}
+                    placeholder={newCommChannel === 'email' ? 'email@example.com' : '+64 21 123 4567'}
+                  />
+                </div>
+              </>
+            )}
+            {(selectedComm?.channel === 'email' || (!selectedComm && newCommChannel === 'email')) && (
               <div className="space-y-2">
                 <Label htmlFor="edit-subject">Subject</Label>
                 <Input
@@ -368,12 +418,19 @@ export default function Approvals() {
                     subject: selectedComm.channel === 'email' ? editSubject : undefined,
                     body: editBody,
                   });
+                } else {
+                  createMutation.mutate({
+                    channel: newCommChannel,
+                    toAddress: newCommRecipient,
+                    subject: newCommChannel === 'email' ? editSubject : undefined,
+                    body: editBody,
+                  });
                 }
               }}
-              disabled={!editBody.trim() || updateMutation.isPending}
+              disabled={!editBody.trim() || (!selectedComm && !newCommRecipient.trim()) || (selectedComm ? updateMutation.isPending : createMutation.isPending)}
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
-              Save Changes
+              {selectedComm ? 'Save Changes' : 'Create Communication'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -464,6 +521,100 @@ export default function Approvals() {
             >
               <Clock className="h-4 w-4 mr-2" />
               Schedule Send
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Template Selector Dialog */}
+      <Dialog open={showTemplateSelector} onOpenChange={setShowTemplateSelector}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Select a Template</DialogTitle>
+            <DialogDescription>
+              Choose a template to create a new communication
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {!templates || templates.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                No templates available. Create templates in the Templates page first.
+              </div>
+            ) : (
+              <div className="grid gap-3">
+                {templates.map((template: any) => (
+                  <Card
+                    key={template.id}
+                    className={`cursor-pointer transition-colors hover:bg-accent ${
+                      selectedTemplate?.id === template.id ? 'border-primary' : ''
+                    }`}
+                    onClick={() => setSelectedTemplate(template)}
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <Badge variant="outline">
+                              {template.category.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                          <CardTitle className="text-lg">{template.name}</CardTitle>
+                          {template.description && (
+                            <CardDescription className="mt-1">
+                              {template.description}
+                            </CardDescription>
+                          )}
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2 text-sm">
+                        <div>
+                          <span className="font-medium">Subject:</span>{' '}
+                          <span className="text-muted-foreground">{template.subject}</span>
+                        </div>
+                        <div>
+                          <span className="font-medium">Body preview:</span>{' '}
+                          <span className="text-muted-foreground line-clamp-2">
+                            {template.body}
+                          </span>
+                        </div>
+                        {template.variables && (
+                          <div>
+                            <span className="font-medium">Variables:</span>{' '}
+                            <span className="text-muted-foreground">
+                              {Array.isArray(template.variables) ? template.variables.join(', ') : template.variables}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setShowTemplateSelector(false);
+              setSelectedTemplate(null);
+            }}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedTemplate) {
+                  setEditSubject(selectedTemplate.subject);
+                  setEditBody(selectedTemplate.body);
+                  setShowTemplateSelector(false);
+                  setShowEdit(true);
+                  setSelectedComm(null);
+                  setSelectedTemplate(null);
+                }
+              }}
+              disabled={!selectedTemplate}
+            >
+              Use Template
             </Button>
           </DialogFooter>
         </DialogContent>
