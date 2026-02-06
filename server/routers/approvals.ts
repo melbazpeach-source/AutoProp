@@ -90,4 +90,26 @@ export const approvalsRouter = router({
       
       return { success: true };
     }),
+
+  update: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      subject: z.string().optional(),
+      body: z.string(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      await db
+        .update(communications)
+        .set({
+          subject: input.subject,
+          body: input.body,
+          updatedAt: new Date(),
+        })
+        .where(eq(communications.id, input.id));
+      
+      return { success: true };
+    }),
 });

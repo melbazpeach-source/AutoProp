@@ -195,3 +195,13 @@
 - [ ] Create activity reports (PDF/Excel export)
 - [ ] Add daily/weekly/monthly report generation
 - [ ] Build compliance audit trail export
+
+
+## Edit Communication Drafts in Approval Queue
+- [x] Add Edit button to each communication card in Approvals page
+- [x] Create edit dialog with subject and body text fields
+- [x] Add update mutation to approvals router
+- [x] Wire up save functionality to update communication in database
+- [x] Refresh approval queue after successful edit
+- [x] Test editing email communications
+- [x] Test editing SMS communications

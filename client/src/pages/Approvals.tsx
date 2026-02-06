@@ -6,13 +6,18 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { CheckCircle2, XCircle, Eye, Mail, FileText, Wrench, Calendar } from 'lucide-react';
+import { CheckCircle2, XCircle, Eye, Mail, FileText, Wrench, Calendar, Pencil } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
 export default function Approvals() {
   const [selectedComm, setSelectedComm] = useState<any>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [showReject, setShowReject] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [editSubject, setEditSubject] = useState('');
+  const [editBody, setEditBody] = useState('');
 
   const { data: pending, refetch } = trpc.approvals.getPending.useQuery();
   const approveMutation = trpc.approvals.approve.useMutation({
@@ -28,6 +33,13 @@ export default function Approvals() {
       refetch();
       setShowReject(false);
       setRejectionReason('');
+    },
+  });
+  const updateMutation = trpc.approvals.update.useMutation({
+    onSuccess: () => {
+      toast.success('Communication updated');
+      refetch();
+      setShowEdit(false);
     },
   });
 
@@ -98,6 +110,19 @@ export default function Approvals() {
                   >
                     <Eye className="h-4 w-4 mr-2" />
                     Preview
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedComm(comm);
+                      setEditSubject(comm.subject || '');
+                      setEditBody(comm.body || '');
+                      setShowEdit(true);
+                    }}
+                  >
+                    <Pencil className="h-4 w-4 mr-2" />
+                    Edit
                   </Button>
                   <Button
                     variant="default"
@@ -189,6 +214,61 @@ export default function Approvals() {
               disabled={!rejectionReason.trim() || rejectMutation.isPending}
             >
               Reject
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={showEdit} onOpenChange={setShowEdit}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Communication</DialogTitle>
+            <DialogDescription>
+              Modify the subject and body before approving
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {selectedComm?.channel === 'email' && (
+              <div className="space-y-2">
+                <Label htmlFor="edit-subject">Subject</Label>
+                <Input
+                  id="edit-subject"
+                  value={editSubject}
+                  onChange={(e) => setEditSubject(e.target.value)}
+                  placeholder="Email subject"
+                />
+              </div>
+            )}
+            <div className="space-y-2">
+              <Label htmlFor="edit-body">Message Body</Label>
+              <Textarea
+                id="edit-body"
+                value={editBody}
+                onChange={(e) => setEditBody(e.target.value)}
+                placeholder="Message content"
+                rows={12}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEdit(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedComm) {
+                  updateMutation.mutate({
+                    id: selectedComm.id,
+                    subject: selectedComm.channel === 'email' ? editSubject : undefined,
+                    body: editBody,
+                  });
+                }
+              }}
+              disabled={!editBody.trim() || updateMutation.isPending}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
