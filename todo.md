@@ -255,3 +255,15 @@
 - [x] Add "Create from Template" workflow
 - [x] Test template selection and application
 - [x] Fix bug with template variables display
+
+
+## Variable Substitution UI
+- [x] Parse template content to extract variable placeholders ({{variable_name}})
+- [x] Add state management for variable values in Approvals page
+- [x] Create variable input fields section in create communication dialog
+- [x] Show input field for each detected variable
+- [x] Implement substitution logic to replace placeholders with user values
+- [x] Update subject and body with substituted values before creating communication
+- [x] Format variable names from snake_case to Title Case
+- [x] Test variable substitution with sample template
+- [x] Verify all variables replaced correctly in subject and body

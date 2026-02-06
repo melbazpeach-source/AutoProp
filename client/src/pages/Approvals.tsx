@@ -29,6 +29,37 @@ export default function Approvals() {
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
   const [newCommChannel, setNewCommChannel] = useState<'email' | 'sms' | 'whatsapp'>('email');
   const [newCommRecipient, setNewCommRecipient] = useState('');
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
+
+  // Extract variables from text (e.g., {{tenant_name}} -> tenant_name)
+  const extractVariables = (text: string): string[] => {
+    const regex = /\{\{([^}]+)\}\}/g;
+    const matches: string[] = [];
+    let match;
+    while ((match = regex.exec(text)) !== null) {
+      if (!matches.includes(match[1])) {
+        matches.push(match[1]);
+      }
+    }
+    return matches;
+  };
+
+  // Get all variables from subject and body
+  const getTemplateVariables = (): string[] => {
+    const subjectVars = extractVariables(editSubject || '');
+    const bodyVars = extractVariables(editBody || '');
+    const allVars = new Set([...subjectVars, ...bodyVars]);
+    return Array.from(allVars);
+  };
+
+  // Substitute variables in text
+  const substituteVariables = (text: string): string => {
+    let result = text;
+    Object.entries(variableValues).forEach(([key, value]) => {
+      result = result.replace(new RegExp(`\\{\\{${key}\\}\\}`, 'g'), value);
+    });
+    return result;
+  };
 
   const { data: pending, refetch } = trpc.approvals.getPending.useQuery();
   const { data: templates } = trpc.templates.list.useQuery();
@@ -90,6 +121,7 @@ export default function Approvals() {
       setEditSubject('');
       setEditBody('');
       setNewCommRecipient('');
+      setVariableValues({});
     },
   });
 
@@ -405,6 +437,35 @@ export default function Approvals() {
                 rows={12}
               />
             </div>
+            {!selectedComm && getTemplateVariables().length > 0 && (
+              <div className="space-y-3 pt-4 border-t">
+                <div>
+                  <h4 className="font-medium text-sm mb-2">Template Variables</h4>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Fill in the values below to replace placeholders in your message
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {getTemplateVariables().map((variable) => (
+                    <div key={variable} className="space-y-1">
+                      <Label htmlFor={`var-${variable}`} className="text-xs">
+                        {variable.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </Label>
+                      <Input
+                        id={`var-${variable}`}
+                        value={variableValues[variable] || ''}
+                        onChange={(e) => setVariableValues(prev => ({
+                          ...prev,
+                          [variable]: e.target.value
+                        }))}
+                        placeholder={`Enter ${variable.replace(/_/g, ' ')}`}
+                        className="text-sm"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEdit(false)}>
@@ -419,11 +480,15 @@ export default function Approvals() {
                     body: editBody,
                   });
                 } else {
+                  // Apply variable substitution if variables exist
+                  const finalSubject = substituteVariables(editSubject);
+                  const finalBody = substituteVariables(editBody);
+                  
                   createMutation.mutate({
                     channel: newCommChannel,
                     toAddress: newCommRecipient,
-                    subject: newCommChannel === 'email' ? editSubject : undefined,
-                    body: editBody,
+                    subject: newCommChannel === 'email' ? finalSubject : undefined,
+                    body: finalBody,
                   });
                 }
               }}
