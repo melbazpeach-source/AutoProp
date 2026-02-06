@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Settings, CheckCircle2, XCircle, RefreshCw, ExternalLink, Workflow, Sparkles } from "lucide-react";
+import { Settings, CheckCircle2, XCircle, RefreshCw, ExternalLink, Workflow, Sparkles, Smartphone, Copy } from "lucide-react";
 import { toast } from "sonner";
 
 export default function Integrations() {
@@ -42,6 +42,7 @@ export default function Integrations() {
   const [geminiConfig, setGeminiConfig] = useState({ enabled: false, apiKey: "" });
   const [storageConfig, setStorageConfig] = useState({ provider: 's3', s3Key: "", s3Secret: "", googleDriveKey: "", dropboxToken: "", oneDriveClientId: "" });
   const [jotformConfig, setJotformConfig] = useState({ enabled: false, apiKey: "", formIds: "" });
+  const [smsForwardConfig, setSmsForwardConfig] = useState({ enabled: false, method: 'app', webhookEmail: "" });
 
   // Find integrations
   const palaceIntegration = integrations?.find(i => i.service === 'palace');
@@ -54,6 +55,7 @@ export default function Integrations() {
   const geminiIntegration = integrations?.find(i => i.service === 'gemini');
   const storageIntegrations = integrations?.filter(i => ['s3', 'google_drive', 'dropbox', 'onedrive'].includes(i.service));
   const jotformIntegration = integrations?.find(i => i.service === 'jotform');
+  const smsForwardIntegration = integrations?.find(i => i.service === 'sms_forward');
 
   // Load configs
   useEffect(() => {
@@ -103,6 +105,12 @@ export default function Integrations() {
       try { setGeminiConfig({ enabled: geminiIntegration.enabled, ...JSON.parse(geminiIntegration.configData) }); } catch (e) {}
     }
   }, [geminiIntegration]);
+
+  useEffect(() => {
+    if (smsForwardIntegration?.configData) {
+      try { setSmsForwardConfig({ enabled: smsForwardIntegration.enabled, ...JSON.parse(smsForwardIntegration.configData) }); } catch (e) {}
+    }
+  }, [smsForwardIntegration]);
 
   // Save functions
   const saveConfig = (service: string, config: any) => {
@@ -304,6 +312,92 @@ export default function Integrations() {
               </div>
               <div className="flex gap-2 pt-4 border-t">
                 <Button onClick={() => saveConfig('slack', slackConfig)} disabled={configureMutation.isPending}>
+                  {configureMutation.isPending ? 'Saving...' : 'Save Configuration'}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* SMS Forwarding Tool */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Smartphone className="h-5 w-5" />
+                SMS Forwarding Tool
+                <IntegrationBadge enabled={smsForwardIntegration?.enabled} />
+              </CardTitle>
+              <CardDescription>
+                Configure SMS forwarding from your mobile device to auto-create tickets
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-2 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <Switch 
+                  checked={!!smsForwardConfig.enabled} 
+                  onCheckedChange={(checked) => setSmsForwardConfig({ ...smsForwardConfig, enabled: checked })} 
+                />
+                <Label className="text-sm font-medium">Enable SMS Forwarding</Label>
+              </div>
+
+              <div className="space-y-4">
+                <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
+                  <h4 className="font-medium text-sm mb-2">📱 Setup Instructions</h4>
+                  <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
+                    <li>Install SMS Forwarder app on your phone (iOS/Android)</li>
+                    <li>Copy the webhook email address below</li>
+                    <li>Configure the app to forward SMS to this email</li>
+                    <li>Incoming SMS will automatically create tickets</li>
+                  </ol>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="webhook-email">Webhook Email Address</Label>
+                  <div className="flex gap-2">
+                    <Input 
+                      id="webhook-email" 
+                      value={smsForwardConfig.webhookEmail || 'sms-inbox@yourplatform.manus.space'} 
+                      onChange={(e) => setSmsForwardConfig({ ...smsForwardConfig, webhookEmail: e.target.value })}
+                      placeholder="sms-inbox@yourplatform.manus.space"
+                    />
+                    <Button 
+                      variant="outline" 
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(smsForwardConfig.webhookEmail || 'sms-inbox@yourplatform.manus.space');
+                        toast.success('Email copied to clipboard');
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    This email will receive forwarded SMS messages and auto-create tickets
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Recommended Apps</Label>
+                  <div className="grid gap-2">
+                    <Button variant="outline" className="justify-start" asChild>
+                      <a href="https://apps.apple.com/nz/app/sms-forwarder-forward-sms/id6693285061" target="_blank" rel="noopener noreferrer">
+                        <Smartphone className="h-4 w-4 mr-2" />
+                        SMS Forwarder (iOS)
+                        <ExternalLink className="h-3 w-3 ml-auto" />
+                      </a>
+                    </Button>
+                    <Button variant="outline" className="justify-start" asChild>
+                      <a href="https://play.google.com/store/apps/details?id=com.smsforwarder" target="_blank" rel="noopener noreferrer">
+                        <Smartphone className="h-4 w-4 mr-2" />
+                        SMS Forwarder (Android)
+                        <ExternalLink className="h-3 w-3 ml-auto" />
+                      </a>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-4 border-t">
+                <Button onClick={() => saveConfig('sms_forward', smsForwardConfig)} disabled={configureMutation.isPending}>
                   {configureMutation.isPending ? 'Saving...' : 'Save Configuration'}
                 </Button>
               </div>

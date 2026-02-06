@@ -432,3 +432,13 @@
 - [ ] Add quick actions (assign, change status, add note)
 - [ ] Show linked property/tenant/tenancy in ticket list
 - [ ] Add bulk operations (assign, close, export)
+
+
+## SMS Forwarding Tool Configuration
+- [x] Add SMS forwarding tool configuration section to Integrations page
+- [x] Create placeholder UI for SMS Forwarder app setup (iOS/Android)
+- [x] Add webhook URL display for forwarding destination
+- [x] Add instructions for configuring SMS forwarding apps
+- [x] Support multiple SMS forwarding methods (app-based, email-based, API-based)
+- [ ] Add email parsing logic for forwarded SMS format detection
+- [ ] Test with SMS Forwarder app format
