@@ -5,7 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Wrench, DollarSign } from "lucide-react";
 
 export default function Maintenance() {
-  const { data: pendingRequests } = trpc.maintenance.pending.useQuery();
+  const { data: pendingRequests } = trpc.maintenance.pendingApprovals.useQuery();
+  const { data: costSummary } = trpc.maintenance.costSummary.useQuery();
+  const approveMutation = trpc.maintenance.approve.useMutation();
+  const rejectMutation = trpc.maintenance.reject.useMutation();
 
   return (
     <div className="space-y-6">
@@ -21,6 +24,14 @@ export default function Maintenance() {
           <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Pending Approval</CardTitle></CardHeader>
           <CardContent><div className="text-2xl font-bold">{pendingRequests?.length || 0}</div></CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Total Cost</CardTitle></CardHeader>
+          <CardContent><div className="text-2xl font-bold">${costSummary?.total.toFixed(2) || '0.00'}</div></CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-3"><CardTitle className="text-sm font-medium">Approved</CardTitle></CardHeader>
+          <CardContent><div className="text-2xl font-bold">{costSummary?.byStatus?.approved || 0}</div></CardContent>
+        </Card>
       </div>
       {pendingRequests && pendingRequests.length > 0 ? (
         <div className="space-y-3">
@@ -34,7 +45,19 @@ export default function Maintenance() {
                   <DollarSign className="h-4 w-4" />
                   <span className="font-bold">${req.estimatedCost || '0.00'}</span>
                 </div>
-                <Button>Approve</Button>
+                <div className="flex gap-2">
+                  <Button onClick={async () => {
+                    await approveMutation.mutateAsync({ id: req.id, approvedBy: 1 });
+                    alert('Approved');
+                  }}>Approve</Button>
+                  <Button variant="outline" onClick={async () => {
+                    const reason = prompt('Rejection reason:');
+                    if (reason) {
+                      await rejectMutation.mutateAsync({ id: req.id, rejectedBy: 1, reason });
+                      alert('Rejected');
+                    }
+                  }}>Reject</Button>
+                </div>
               </CardContent>
             </Card>
           ))}

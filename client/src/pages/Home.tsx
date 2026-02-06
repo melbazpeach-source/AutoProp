@@ -11,7 +11,7 @@ export default function Home() {
   const { data: tenants } = trpc.tenants.list.useQuery();
   const { data: tickets } = trpc.tickets.list.useQuery();
   const { data: arrears } = trpc.rentArrears.requiresAction.useQuery({ minDaysOverdue: 10 });
-  const { data: maintenance } = trpc.maintenance.pending.useQuery();
+  const { data: maintenance } = trpc.maintenance.pendingApprovals.useQuery();
   const { data: viewings } = trpc.viewings.list.useQuery();
   const { data: communications } = trpc.communications.recent.useQuery({ limit: 10 });
 

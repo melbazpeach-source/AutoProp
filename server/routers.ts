@@ -8,6 +8,7 @@ import { palaceSyncService } from "./palace-sync";
 import { communicationsService } from "./communications-service";
 import { csvRouter } from "./routers/csv";
 import { ArrearsService } from './arrears-service';
+import { MaintenanceService } from './maintenance-service';
 import { rentArrears, tenants, properties } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { getDb } from './db';
@@ -16,6 +17,17 @@ import { nanoid } from "nanoid";
 export const appRouter = router({
   system: systemRouter,
   csv: csvRouter,
+  
+  maintenance: router({
+    pendingApprovals: protectedProcedure.query(() => MaintenanceService.getPendingApprovals()),
+    approve: protectedProcedure
+      .input(z.object({ id: z.number(), approvedBy: z.number() }))
+      .mutation(({ input }) => MaintenanceService.approve(input.id, input.approvedBy)),
+    reject: protectedProcedure
+      .input(z.object({ id: z.number(), rejectedBy: z.number(), reason: z.string() }))
+      .mutation(({ input }) => MaintenanceService.reject(input.id, input.rejectedBy, input.reason)),
+    costSummary: protectedProcedure.query(() => MaintenanceService.getCostSummary()),
+  }),
   
   arrears: router({
     checkOverdue: protectedProcedure.query(() => ArrearsService.checkOverdueArrears()),
@@ -303,55 +315,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ============================================================================
-  // Maintenance
-  // ============================================================================
-  maintenance: router({
-    list: protectedProcedure.query(async () => {
-      return await db.getAllProperties(); // Will be replaced with actual maintenance query
-    }),
-
-    byProperty: protectedProcedure
-      .input(z.object({ propertyId: z.number() }))
-      .query(async ({ input }) => {
-        return await db.getMaintenanceRequestsByPropertyId(input.propertyId);
-      }),
-
-    pending: protectedProcedure.query(async () => {
-      return await db.getPendingMaintenanceRequests();
-    }),
-
-    create: protectedProcedure
-      .input(z.object({
-        propertyId: z.number(),
-        tenantId: z.number().optional(),
-        title: z.string(),
-        description: z.string().optional(),
-        category: z.enum(['plumbing', 'electrical', 'hvac', 'structural', 'appliance', 'pest', 'garden', 'other']).optional(),
-        urgency: z.enum(['routine', 'urgent', 'emergency']).optional(),
-        estimatedCost: z.string().optional(),
-      }))
-      .mutation(async ({ input }) => {
-        return await db.createMaintenanceRequest({
-          ...input,
-          status: 'draft',
-        });
-      }),
-
-    approve: protectedProcedure
-      .input(z.object({
-        id: z.number(),
-        scheduledDate: z.date().optional(),
-      }))
-      .mutation(async ({ input, ctx }) => {
-        return await db.updateMaintenanceRequest(input.id, {
-          status: 'approved',
-          approvedBy: ctx.user.id,
-          approvedAt: new Date(),
-          scheduledDate: input.scheduledDate,
-        });
-      }),
-  }),
+  // Maintenance router moved to line 21 - old methods removed
 
   // ============================================================================
   // Viewings
