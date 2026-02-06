@@ -6,9 +6,10 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { CheckCircle2, XCircle, Eye, Mail, FileText, Wrench, Calendar, Pencil } from 'lucide-react';
+import { CheckCircle2, XCircle, Eye, Mail, FileText, Wrench, Calendar, Pencil, CheckSquare, Square, Clock } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function Approvals() {
   const [selectedComm, setSelectedComm] = useState<any>(null);
@@ -18,6 +19,12 @@ export default function Approvals() {
   const [rejectionReason, setRejectionReason] = useState('');
   const [editSubject, setEditSubject] = useState('');
   const [editBody, setEditBody] = useState('');
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const [showBulkReject, setShowBulkReject] = useState(false);
+  const [bulkRejectionReason, setBulkRejectionReason] = useState('');
+  const [showSchedule, setShowSchedule] = useState(false);
+  const [scheduledDate, setScheduledDate] = useState('');
+  const [scheduledTime, setScheduledTime] = useState('');
 
   const { data: pending, refetch } = trpc.approvals.getPending.useQuery();
   const approveMutation = trpc.approvals.approve.useMutation({
@@ -42,6 +49,48 @@ export default function Approvals() {
       setShowEdit(false);
     },
   });
+  const bulkApproveMutation = trpc.approvals.bulkApprove.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.successCount} communications approved and sent`);
+      if (data.failCount > 0) {
+        toast.error(`${data.failCount} communications failed to send`);
+      }
+      refetch();
+      setSelectedIds([]);
+    },
+  });
+  const bulkRejectMutation = trpc.approvals.bulkReject.useMutation({
+    onSuccess: (data) => {
+      toast.success(`${data.successCount} communications rejected`);
+      refetch();
+      setShowBulkReject(false);
+      setBulkRejectionReason('');
+      setSelectedIds([]);
+    },
+  });
+  const scheduleMutation = trpc.approvals.schedule.useMutation({
+    onSuccess: () => {
+      toast.success('Communication scheduled successfully');
+      refetch();
+      setShowSchedule(false);
+      setScheduledDate('');
+      setScheduledTime('');
+    },
+  });
+
+  const toggleSelection = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === (pending?.length || 0)) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(pending?.map(c => c.id) || []);
+    }
+  };
 
   const getTypeIcon = (type: string) => {
     switch (type) {
@@ -66,11 +115,52 @@ export default function Approvals() {
   return (
     <div className="container py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Communication Approvals</h1>
-        <p className="text-muted-foreground mt-2">
-          Review and approve communications before sending
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Communication Approvals</h1>
+            <p className="text-muted-foreground mt-2">
+              Review and approve communications before sending
+            </p>
+          </div>
+          {selectedIds.length > 0 && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">
+                {selectedIds.length} selected
+              </span>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => bulkApproveMutation.mutate({ ids: selectedIds })}
+                disabled={bulkApproveMutation.isPending}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Approve All ({selectedIds.length})
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowBulkReject(true)}
+              >
+                <XCircle className="h-4 w-4 mr-2" />
+                Reject All ({selectedIds.length})
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
+
+      {pending && pending.length > 0 && (
+        <div className="mb-4 flex items-center gap-2">
+          <Checkbox
+            checked={selectedIds.length === pending.length}
+            onCheckedChange={toggleSelectAll}
+            id="select-all"
+          />
+          <label htmlFor="select-all" className="text-sm font-medium cursor-pointer">
+            Select All
+          </label>
+        </div>
+      )}
 
       <div className="grid gap-4">
         {!pending || pending.length === 0 ? (
@@ -85,6 +175,10 @@ export default function Approvals() {
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
+                    <Checkbox
+                      checked={selectedIds.includes(comm.id)}
+                      onCheckedChange={() => toggleSelection(comm.id)}
+                    />
                     {getTypeIcon(comm.channel)}
                     <div>
                       <CardTitle className="text-lg">{comm.subject || `${comm.channel.toUpperCase()} Message`}</CardTitle>
@@ -132,6 +226,17 @@ export default function Approvals() {
                   >
                     <CheckCircle2 className="h-4 w-4 mr-2" />
                     Approve & Send
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedComm(comm);
+                      setShowSchedule(true);
+                    }}
+                  >
+                    <Clock className="h-4 w-4 mr-2" />
+                    Schedule
                   </Button>
                   <Button
                     variant="destructive"
@@ -269,6 +374,96 @@ export default function Approvals() {
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Bulk Reject Dialog */}
+      <Dialog open={showBulkReject} onOpenChange={setShowBulkReject}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Multiple Communications</DialogTitle>
+            <DialogDescription>
+              Provide a reason for rejecting {selectedIds.length} communications
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            placeholder="Reason for rejection..."
+            value={bulkRejectionReason}
+            onChange={(e) => setBulkRejectionReason(e.target.value)}
+            rows={4}
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowBulkReject(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                if (bulkRejectionReason.trim()) {
+                  bulkRejectMutation.mutate({
+                    ids: selectedIds,
+                    reason: bulkRejectionReason,
+                  });
+                }
+              }}
+              disabled={!bulkRejectionReason.trim() || bulkRejectMutation.isPending}
+            >
+              Reject {selectedIds.length} Communications
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Schedule Dialog */}
+      <Dialog open={showSchedule} onOpenChange={setShowSchedule}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Schedule Communication</DialogTitle>
+            <DialogDescription>
+              Choose when to send this communication
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="schedule-date">Date</Label>
+              <Input
+                id="schedule-date"
+                type="date"
+                value={scheduledDate}
+                onChange={(e) => setScheduledDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="schedule-time">Time</Label>
+              <Input
+                id="schedule-time"
+                type="time"
+                value={scheduledTime}
+                onChange={(e) => setScheduledTime(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSchedule(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                if (selectedComm && scheduledDate && scheduledTime) {
+                  const scheduledFor = new Date(`${scheduledDate}T${scheduledTime}`);
+                  scheduleMutation.mutate({
+                    id: selectedComm.id,
+                    scheduledFor,
+                  });
+                }
+              }}
+              disabled={!scheduledDate || !scheduledTime || scheduleMutation.isPending}
+            >
+              <Clock className="h-4 w-4 mr-2" />
+              Schedule Send
             </Button>
           </DialogFooter>
         </DialogContent>

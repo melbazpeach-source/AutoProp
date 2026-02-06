@@ -205,3 +205,41 @@
 - [x] Refresh approval queue after successful edit
 - [x] Test editing email communications
 - [x] Test editing SMS communications
+
+
+## Bulk Actions in Approval Queue
+- [x] Add checkbox selection to each communication card
+- [x] Add "Select All" checkbox in header
+- [x] Create bulk action toolbar with Approve All and Reject All buttons
+- [x] Implement bulk approve mutation in backend
+- [x] Implement bulk reject mutation in backend
+- [x] Show selected count in toolbar
+- [x] Add confirmation dialog for bulk actions
+- [x] Test bulk approve functionality
+- [x] Test bulk reject functionality
+
+## Email Templates Library
+- [x] Create email_templates database table
+- [x] Add template fields (name, category, subject, body, variables)
+- [x] Create templates router with CRUD endpoints
+- [x] Build Templates management page UI
+- [x] Add template creation form
+- [x] Add template editing functionality
+- [x] Add template deletion with confirmation
+- [x] Create template categories (rent_reminder, maintenance, viewing, general)
+- [x] Add template variable system ({{tenant_name}}, {{property_address}}, etc.)
+- [ ] Add "Use Template" button in approval queue
+- [ ] Test template creation and usage
+
+## Scheduled Communication Sending
+- [x] Add scheduledFor field to communications table
+- [x] Update schema and push to database
+- [x] Add scheduling dialog to approval workflow
+- [x] Create date/time picker for scheduling
+- [x] Add schedule mutation to backend
+- [x] Add "Scheduled" status to communications
+- [x] Test scheduling dialog UI
+- [ ] Create cron job to check for scheduled communications
+- [ ] Implement scheduled send processor
+- [ ] Show scheduled communications in separate section
+- [ ] Add ability to cancel scheduled sends

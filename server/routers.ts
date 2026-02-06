@@ -3,6 +3,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { tagsRouter } from "./routers/tags";
 import { approvalsRouter } from "./routers/approvals";
+import { templatesRouter } from "./routers/templates";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -21,6 +22,7 @@ export const appRouter = router({
   system: systemRouter,
   csv: csvRouter,
   approvals: approvalsRouter,
+  templates: templatesRouter,
   
   maintenance: router({
     pendingApprovals: protectedProcedure.query(() => MaintenanceService.getPendingApprovals()),

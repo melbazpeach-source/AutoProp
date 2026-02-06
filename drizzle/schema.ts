@@ -104,9 +104,10 @@ export const communications = mysqlTable("communications", {
   tenantId: int("tenantId").references(() => tenants.id),
   propertyId: int("propertyId").references(() => properties.id),
   ticketId: int("ticketId").references(() => tickets.id),
-  status: mysqlEnum("status", ["draft", "pending_approval", "approved", "sent", "failed", "cancelled"]).default("draft"),
+  status: mysqlEnum("status", ["draft", "pending_approval", "approved", "scheduled", "sent", "failed", "cancelled"]).default("draft"),
   approvedBy: int("approvedBy").references(() => users.id),
   approvedAt: timestamp("approvedAt"),
+  scheduledFor: timestamp("scheduledFor"),
   sentAt: timestamp("sentAt"),
   autoResponded: boolean("autoResponded").default(false),
   autoResponseSentAt: timestamp("autoResponseSentAt"),
@@ -398,3 +399,23 @@ export const pendingCommunications = mysqlTable('pendingCommunications', {
 
 export type PendingCommunication = typeof pendingCommunications.$inferSelect;
 export type InsertPendingCommunication = typeof pendingCommunications.$inferInsert;
+
+/**
+ * Email templates for common communication scenarios
+ */
+export const emailTemplates = mysqlTable("emailTemplates", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 256 }).notNull(),
+  category: mysqlEnum("category", ["rent_reminder", "maintenance", "viewing", "breach_letter", "general"]).notNull(),
+  subject: text("subject").notNull(),
+  body: text("body").notNull(),
+  variables: text("variables"), // JSON array of variable names like ["tenant_name", "property_address", "amount_due"]
+  description: text("description"),
+  isActive: boolean("isActive").default(true).notNull(),
+  createdBy: int("createdBy").references(() => users.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EmailTemplate = typeof emailTemplates.$inferSelect;
+export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
