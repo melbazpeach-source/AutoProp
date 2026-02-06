@@ -7,11 +7,31 @@ import * as db from "./db";
 import { palaceSyncService } from "./palace-sync";
 import { communicationsService } from "./communications-service";
 import { csvRouter } from "./routers/csv";
+import { ArrearsService } from './arrears-service';
+import { rentArrears, tenants, properties } from '../drizzle/schema';
+import { eq } from 'drizzle-orm';
+import { getDb } from './db';
 import { nanoid } from "nanoid";
 
 export const appRouter = router({
   system: systemRouter,
   csv: csvRouter,
+  
+  arrears: router({
+    checkOverdue: protectedProcedure.query(() => ArrearsService.checkOverdueArrears()),
+    generateLetter: protectedProcedure
+      .input(z.object({ arrearsId: z.number(), tenantId: z.number(), propertyId: z.number() }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) return { letter: '' };
+        const arrearsData = await db.select().from(rentArrears).where(eq(rentArrears.id, input.arrearsId)).limit(1);
+        const tenant = await db.select().from(tenants).where(eq(tenants.id, input.tenantId)).limit(1);
+        const property = await db.select().from(properties).where(eq(properties.id, input.propertyId)).limit(1);
+        const letter = await ArrearsService.generateBreachLetter({ arrears: arrearsData[0], tenant: tenant[0], property: property[0] });
+        return { letter };
+      }),
+    getDailySummary: protectedProcedure.query(() => ArrearsService.getDailySummary()),
+  }),
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),

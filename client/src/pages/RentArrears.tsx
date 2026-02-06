@@ -6,6 +6,7 @@ import { AlertCircle, DollarSign, Calendar, FileText } from "lucide-react";
 
 export default function RentArrears() {
   const { data: arrearsData, isLoading } = trpc.rentArrears.requiresAction.useQuery({ minDaysOverdue: 10 });
+  const generateLetter = trpc.arrears.generateLetter.useMutation();
 
   if (isLoading) {
     return <div>Loading rent arrears...</div>;
@@ -157,7 +158,17 @@ export default function RentArrears() {
                   )}
 
                   <div className="mt-4 flex gap-2">
-                    <Button variant="default">
+                    <Button 
+                      variant="default"
+                      onClick={async () => {
+                        const res = await generateLetter.mutateAsync({
+                          arrearsId: arrear.id,
+                          tenantId: tenant?.id || 0,
+                          propertyId: property?.id || 0
+                        });
+                        alert(res.letter);
+                      }}
+                    >
                       Generate Breach Letter
                     </Button>
                     <Button variant="outline">
