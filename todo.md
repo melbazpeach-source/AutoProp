@@ -168,3 +168,14 @@
 - [x] Add maintenance type filter
 - [x] Update backend query to support filters
 - [x] Display filtered cost totals and breakdowns
+
+
+## HITL Communication Approval Queue
+- [ ] Create communications approval database table
+- [ ] Build approval queue page showing all pending communications
+- [ ] Add breach letter approval workflow
+- [ ] Add email approval workflow
+- [ ] Add maintenance confirmation approval workflow
+- [ ] Implement approve/reject/edit functionality
+- [ ] Add preview for each communication type
+- [ ] Wire up approved communications to actual sending
