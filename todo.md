@@ -267,3 +267,20 @@
 - [x] Format variable names from snake_case to Title Case
 - [x] Test variable substitution with sample template
 - [x] Verify all variables replaced correctly in subject and body
+
+
+## Scheduled Communications Dashboard
+- [x] Create backend query to fetch scheduled communications
+- [x] Build Scheduled page component with dashboard layout
+- [x] Display scheduled communications in card format
+- [x] Implement countdown timer component showing time until send
+- [x] Add preview button for each scheduled communication
+- [x] Add cancel button to remove scheduled sends
+- [x] Add reschedule button to change send time
+- [x] Show channel and countdown badges
+- [x] Add navigation menu item for Scheduled page
+- [x] Test countdown timers update in real-time
+- [x] Add cancelScheduled mutation to backend
+- [x] Add reschedule mutation to backend
+- [x] Test preview dialog functionality
+- [x] Verify scheduled communications removed from approval queue

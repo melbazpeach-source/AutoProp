@@ -20,6 +20,7 @@ import Integrations from "./pages/Integrations";
 import DataImport from "./pages/DataImport";
 import Settings from "./pages/Settings";
 import Templates from "./pages/Templates";
+import Scheduled from "./pages/Scheduled";
 
 function Router() {
   return (
@@ -105,6 +106,11 @@ function Router() {
       <Route path={"/approvals"}>
         <DashboardLayout>
           <Approvals />
+        </DashboardLayout>
+      </Route>
+      <Route path={"/scheduled"}>
+        <DashboardLayout>
+          <Scheduled />
         </DashboardLayout>
       </Route>
       

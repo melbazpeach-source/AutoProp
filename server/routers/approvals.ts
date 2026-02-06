@@ -246,6 +246,37 @@ export const approvalsRouter = router({
       .where(eq(communications.status, 'scheduled'));
   }),
 
+  cancelScheduled: protectedProcedure
+    .input(z.object({ id: z.number() }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      await db
+        .update(communications)
+        .set({ status: 'cancelled' })
+        .where(eq(communications.id, input.id));
+      
+      return { success: true };
+    }),
+
+  reschedule: protectedProcedure
+    .input(z.object({
+      id: z.number(),
+      scheduledFor: z.date(),
+    }))
+    .mutation(async ({ input }) => {
+      const db = await getDb();
+      if (!db) throw new Error('Database not available');
+      
+      await db
+        .update(communications)
+        .set({ scheduledFor: input.scheduledFor })
+        .where(eq(communications.id, input.id));
+      
+      return { success: true };
+    }),
+
   create: protectedProcedure
     .input(z.object({
       channel: z.enum(['email', 'sms', 'whatsapp']),
