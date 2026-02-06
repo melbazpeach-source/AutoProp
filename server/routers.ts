@@ -151,7 +151,7 @@ export const appRouter = router({
       }),
 
     byStatus: protectedProcedure
-      .input(z.object({ status: z.enum(['open', 'pending', 'in_progress', 'waiting_approval', 'resolved', 'closed']) }))
+      .input(z.object({ status: z.enum(['new', 'open', 'pending', 'in_progress', 'awaiting_approval', 'approved', 'sent', 'resolved', 'closed']) }))
       .query(async ({ input }) => {
         return await db.getTicketsByStatus(input.status);
       }),
@@ -200,7 +200,7 @@ export const appRouter = router({
     update: protectedProcedure
       .input(z.object({
         id: z.number(),
-        status: z.enum(['open', 'pending', 'in_progress', 'waiting_approval', 'resolved', 'closed']).optional(),
+        status: z.enum(['new', 'open', 'pending', 'in_progress', 'awaiting_approval', 'approved', 'sent', 'resolved', 'closed']).optional(),
         priority: z.enum(['low', 'medium', 'high', 'urgent']).optional(),
         assignedTo: z.number().optional(),
         description: z.string().optional(),

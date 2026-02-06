@@ -368,3 +368,67 @@
 - [ ] Add timeline entry for maintenance requests
 - [ ] Add timeline entry for payments received
 - [ ] Add filtering and search in timeline
+
+
+## Ticket System Enhancements (Current)
+
+### Auto-Ticket Creation from Communications
+- [x] Add ticket creation webhook for incoming emails
+- [x] Add ticket creation webhook for incoming SMS
+- [x] Add ticket creation webhook for incoming WhatsApp messages
+- [x] Implement smart threading logic to link communications to existing tickets
+- [x] Add auto-linking by sender email/phone
+- [x] Add auto-linking by property address mentioned in message
+- [x] Add auto-linking by Palace WO number mentioned in message
+- [x] Create ticket source tracking (email, sms, whatsapp, phone, in-person, manual)
+- [x] Create ticket-automation.ts service
+- [x] Implement identifier extraction (addresses, WO numbers, emails, phones)
+- [x] Implement findExistingTicket for threading
+- [x] Implement smartLink for auto-linking entities
+- [x] Add ticket type determination from message content
+- [ ] Add auto-linking by tenant name mentioned in message (requires NLP)
+
+### Ticket Threading and Comments
+- [ ] Add ticket_comments table for conversation threading
+- [ ] Add comment type field (inbound, outbound, internal_note)
+- [ ] Build ticket detail view with full conversation thread
+- [ ] Display chronological timeline of all communications
+- [ ] Add ability to add internal notes to tickets
+- [ ] Show inbound/outbound indicators on comments
+
+### Outbound Communication Integration
+- [ ] Auto-create ticket when creating outbound communication
+- [ ] Link communication to ticket in database
+- [ ] Thread outbound communications to existing tickets when applicable
+- [ ] Update ticket status when communication is approved
+- [ ] Update ticket status when communication is sent
+- [ ] Thread any replies back to the original ticket
+
+### Palace WO Integration
+- [ ] Add palaceWoNumber field to tickets table
+- [ ] Add CSV import for Palace maintenance work orders
+- [ ] Map Palace WO fields to ticket fields
+- [ ] Create tickets from Palace WO import
+- [ ] Add Palace WO number display in ticket list
+- [ ] Add Palace WO number search/filter
+
+### Enhanced Ticket Types and Categories
+- [ ] Add ticket category field (communication, maintenance, notice, system_note)
+- [ ] Add ticket priority field (urgent, high, medium, low)
+- [ ] Add ticket assignment field (user_id)
+- [ ] Update ticket status enum (new, in_progress, awaiting_approval, approved, sent, resolved, closed)
+- [ ] Add filters for category, priority, status, source
+
+### CSV Import/Export
+- [ ] Build CSV export for all tickets
+- [ ] Build CSV import for bulk ticket creation
+- [ ] Add Palace WO CSV import template
+- [ ] Add validation for CSV imports
+
+### UI Enhancements
+- [ ] Enhance Tickets page with category filters
+- [ ] Add source badges (email, sms, phone, palace, manual)
+- [ ] Add ticket detail modal with full thread
+- [ ] Add quick actions (assign, change status, add note)
+- [ ] Show linked property/tenant/tenancy in ticket list
+- [ ] Add bulk operations (assign, close, export)

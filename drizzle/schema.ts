@@ -103,7 +103,7 @@ export const communications = mysqlTable("communications", {
   attachmentUrls: text("attachmentUrls"), // JSON array of S3 URLs
   tenantId: int("tenantId").references(() => tenants.id),
   propertyId: int("propertyId").references(() => properties.id),
-  ticketId: int("ticketId").references(() => tickets.id),
+  ticketId: int("ticketId"), // References tickets.id (circular ref resolved in comments)
   status: mysqlEnum("status", ["draft", "pending_approval", "approved", "scheduled", "sent", "failed", "cancelled"]).default("draft"),
   approvedBy: int("approvedBy").references(() => users.id),
   approvedAt: timestamp("approvedAt"),
@@ -127,14 +127,22 @@ export const tickets = mysqlTable("tickets", {
   id: int("id").autoincrement().primaryKey(),
   ticketNumber: varchar("ticketNumber", { length: 32 }).unique().notNull(),
   type: mysqlEnum("type", ["inquiry", "maintenance", "complaint", "arrears", "viewing", "application", "other"]).notNull(),
-  status: mysqlEnum("status", ["open", "pending", "in_progress", "waiting_approval", "resolved", "closed"]).notNull(),
+  category: mysqlEnum("category", ["communication", "maintenance", "notice", "system_note"]).default("communication"),
+  status: mysqlEnum("status", ["new", "open", "pending", "in_progress", "awaiting_approval", "approved", "sent", "resolved", "closed"]).notNull(),
   priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium"),
+  source: mysqlEnum("source", ["email", "sms", "whatsapp", "phone", "in_person", "manual", "palace_import", "system"]).default("manual"),
   subject: text("subject").notNull(),
   description: text("description"),
   tenantId: int("tenantId").references(() => tenants.id),
   propertyId: int("propertyId").references(() => properties.id),
+  tenancyId: int("tenancyId").references(() => tenancies.id),
   assignedTo: int("assignedTo").references(() => users.id),
   createdBy: int("createdBy").references(() => users.id),
+  palaceWoNumber: varchar("palaceWoNumber", { length: 64 }), // Palace Work Order number
+  communicationId: int("communicationId"), // Link to communication if applicable (circular ref resolved in comments)
+  parentTicketId: int("parentTicketId"), // For threading related tickets
+  senderEmail: varchar("senderEmail", { length: 320 }), // Original sender email
+  senderPhone: varchar("senderPhone", { length: 32 }), // Original sender phone
   resolvedAt: timestamp("resolvedAt"),
   closedAt: timestamp("closedAt"),
   dueDate: timestamp("dueDate"),
@@ -161,6 +169,26 @@ export const ticketActivities = mysqlTable("ticketActivities", {
 
 export type TicketActivity = typeof ticketActivities.$inferSelect;
 export type InsertTicketActivity = typeof ticketActivities.$inferInsert;
+
+/**
+ * Ticket comments for threading conversations
+ */
+export const ticketComments = mysqlTable("ticketComments", {
+  id: int("id").autoincrement().primaryKey(),
+  ticketId: int("ticketId").notNull().references(() => tickets.id),
+  userId: int("userId").references(() => users.id),
+  commentType: mysqlEnum("commentType", ["inbound", "outbound", "internal_note"]).notNull(),
+  content: text("content").notNull(),
+  communicationId: int("communicationId").references(() => communications.id), // Link to actual communication if applicable
+  senderName: varchar("senderName", { length: 255 }), // For external senders
+  senderEmail: varchar("senderEmail", { length: 320 }),
+  senderPhone: varchar("senderPhone", { length: 32 }),
+  metadata: text("metadata"), // JSON for additional data
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type TicketComment = typeof ticketComments.$inferSelect;
+export type InsertTicketComment = typeof ticketComments.$inferInsert;
 
 /**
  * Maintenance requests and planning
