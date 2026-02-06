@@ -23,6 +23,8 @@ import Templates from "./pages/Templates";
 import Scheduled from "./pages/Scheduled";
 import SentCommunications from "./pages/SentCommunications";
 import Tenancies from "./pages/Tenancies";
+import Alerts from "./pages/Alerts";
+import TenancyTimeline from "./pages/TenancyTimeline";
 
 function Router() {
   return (
@@ -42,6 +44,12 @@ function Router() {
       <Route path={"/tenancies"}>
         <DashboardLayout>
           <Tenancies />
+        </DashboardLayout>
+      </Route>
+      
+      <Route path={"/tenancies/:id/timeline"}>
+        <DashboardLayout>
+          <TenancyTimeline />
         </DashboardLayout>
       </Route>
       
@@ -108,6 +116,12 @@ function Router() {
       <Route path={"/integrations"}>
         <DashboardLayout>
           <Integrations />
+        </DashboardLayout>
+      </Route>
+      
+      <Route path={"/alerts"}>
+        <DashboardLayout>
+          <Alerts />
         </DashboardLayout>
       </Route>
       

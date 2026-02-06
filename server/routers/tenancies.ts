@@ -225,6 +225,56 @@ export const tenanciesRouter = router({
     }),
 
   // Alert management
+  getAllAlerts: protectedProcedure
+    .input(z.object({
+      status: z.enum(['active', 'resolved', 'dismissed', 'all']).optional(),
+      priority: z.enum(['low', 'medium', 'high', 'urgent', 'all']).optional(),
+      alertType: z.string().optional(),
+    }).optional())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      let query = db
+        .select({
+          alert: tenancyAlerts,
+          tenancy: tenancies,
+          property: properties,
+          tenant: tenants,
+        })
+        .from(tenancyAlerts)
+        .leftJoin(tenancies, eq(tenancyAlerts.tenancyId, tenancies.id))
+        .leftJoin(properties, eq(tenancies.propertyId, properties.id))
+        .leftJoin(tenants, eq(tenancies.tenantId, tenants.id))
+        .$dynamic();
+
+      const filters = [];
+
+      if (input?.status && input.status !== 'all') {
+        filters.push(eq(tenancyAlerts.status, input.status));
+      }
+
+      if (input?.priority && input.priority !== 'all') {
+        filters.push(eq(tenancyAlerts.priority, input.priority));
+      }
+
+      if (input?.alertType) {
+        filters.push(sql`${tenancyAlerts.alertType} = ${input.alertType}`);
+      }
+
+      if (filters.length > 0) {
+        query = query.where(and(...filters));
+      }
+
+      const results = await query.orderBy(
+        desc(tenancyAlerts.priority),
+        asc(tenancyAlerts.dueDate),
+        desc(tenancyAlerts.createdAt)
+      );
+
+      return results;
+    }),
+
   getAlerts: protectedProcedure
     .input(z.object({ tenancyId: z.number() }))
     .query(async ({ input }) => {
@@ -311,6 +361,82 @@ export const tenanciesRouter = router({
         .where(eq(tenancyAlerts.id, input.id));
 
       return { success: true };
+    }),
+
+  // Timeline
+  getTimeline: protectedProcedure
+    .input(z.object({ tenancyId: z.number() }))
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return [];
+
+      const events: Array<{
+        id: string;
+        type: 'lease_start' | 'lease_end' | 'rent_change' | 'alert' | 'communication' | 'maintenance';
+        title: string;
+        description: string;
+        timestamp: Date;
+        metadata?: any;
+      }> = [];
+
+      // Get tenancy details
+      const [tenancy] = await db
+        .select()
+        .from(tenancies)
+        .where(eq(tenancies.id, input.tenancyId));
+
+      if (!tenancy) return [];
+
+      // Add lease start event
+      if (tenancy.leaseStartDate) {
+        events.push({
+          id: `lease-start-${tenancy.id}`,
+          type: 'lease_start',
+          title: 'Lease Started',
+          description: `Tenancy commenced with weekly rent of $${tenancy.weeklyRent}`,
+          timestamp: tenancy.leaseStartDate,
+          metadata: { weeklyRent: tenancy.weeklyRent, bondAmount: tenancy.bondAmount },
+        });
+      }
+
+      // Add lease end event if applicable
+      if (tenancy.leaseEndDate && tenancy.status === 'completed') {
+        events.push({
+          id: `lease-end-${tenancy.id}`,
+          type: 'lease_end',
+          title: 'Lease Ended',
+          description: 'Tenancy completed',
+          timestamp: tenancy.leaseEndDate,
+        });
+      }
+
+      // Get all alerts for this tenancy
+      const alerts = await db
+        .select()
+        .from(tenancyAlerts)
+        .where(eq(tenancyAlerts.tenancyId, input.tenancyId))
+        .orderBy(desc(tenancyAlerts.createdAt));
+
+      for (const alert of alerts) {
+        events.push({
+          id: `alert-${alert.id}`,
+          type: 'alert',
+          title: alert.title,
+          description: alert.description || `${alert.alertType} alert ${alert.status}`,
+          timestamp: alert.createdAt,
+          metadata: {
+            alertType: alert.alertType,
+            priority: alert.priority,
+            status: alert.status,
+            resolvedAt: alert.resolvedAt,
+          },
+        });
+      }
+
+      // Sort all events by timestamp (most recent first)
+      events.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
+
+      return events;
     }),
 
   // CSV Export

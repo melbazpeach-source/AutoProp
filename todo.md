@@ -328,3 +328,43 @@
 - [ ] Show pinned tenancies at the top of the list
 - [ ] Add bulk operations (tag, flag, export selected)
 - [ ] Test CSV import/export functionality
+
+
+## Alert Notifications Dashboard
+- [x] Create alerts dashboard page showing all active alerts across tenancies
+- [x] Add countdown timers for alert due dates
+- [x] Group alerts by priority (urgent, high, medium, low)
+- [x] Add quick-action buttons (resolve, dismiss)
+- [x] Show alert details (tenancy, property, tenant, type, description)
+- [x] Add filtering by alert type and priority
+- [x] Add navigation menu item for Alerts dashboard
+- [x] Test alert dashboard with sample data
+- [x] Fix getAlertTypeLabel to handle undefined alertType
+
+## Automated Alert Triggers
+- [x] Create alert trigger service for automated alert creation
+- [x] Add trigger for lease expiring in 30 days
+- [x] Add trigger for lease renewal reminder (60 days before expiry)
+- [x] Create scheduled job to check triggers daily
+- [x] Initialize alert triggers on server startup
+- [x] Fix SQL syntax errors in alert trigger queries
+- [ ] Add trigger for rent 7+ days overdue (requires rent payment tracking)
+- [ ] Add trigger for inspection due (requires inspections table)
+- [ ] Add trigger configuration settings
+
+## Tenancy Timeline View
+- [x] Create timeline component for tenancy history
+- [x] Add timeline entry for lease start/end changes
+- [x] Add timeline entry for alerts created/resolved
+- [x] Add getTimeline query to tenancies router
+- [x] Create TenancyTimeline page component
+- [x] Add Timeline button to tenancies table
+- [x] Add route for tenancy timeline view
+- [x] Test timeline with sample tenancy data
+- [x] Add color-coded timeline icons
+- [x] Add metadata display for timeline events
+- [ ] Add timeline entry for rent adjustments
+- [ ] Add timeline entry for communications sent
+- [ ] Add timeline entry for maintenance requests
+- [ ] Add timeline entry for payments received
+- [ ] Add filtering and search in timeline

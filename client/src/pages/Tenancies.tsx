@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,6 +52,7 @@ export default function Tenancies() {
   const [alertDialogOpen, setAlertDialogOpen] = useState(false);
   const [selectedTenancy, setSelectedTenancy] = useState<any>(null);
   const [alertsDialogOpen, setAlertsDialogOpen] = useState(false);
+  const [, setLocation] = useLocation();
 
   const { data: tenancies, isLoading, refetch } = trpc.tenancies.getAll.useQuery({
     status: status === "all" ? undefined : status,
@@ -306,6 +308,13 @@ export default function Tenancies() {
                         }}
                       >
                         <AlertTriangle className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setLocation(`/tenancies/${item.tenancy.id}/timeline`)}
+                      >
+                        Timeline
                       </Button>
                     </div>
                   </TableCell>
