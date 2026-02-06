@@ -1,0 +1,1 @@
+ALTER TABLE `integrationSettings` MODIFY COLUMN `service` enum('palace','outlook','vonage','slack','n8n','claude','chatgpt','gemini','s3','google_drive','dropbox','onedrive','jotform') NOT NULL;

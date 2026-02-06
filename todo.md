@@ -139,3 +139,11 @@
 - [x] Add ChatGPT configuration form to Integrations page
 - [x] Add Gemini configuration form to Integrations page
 - [ ] Create AI service selector for different tasks (email drafting, breach letters, summaries)
+
+
+## Document Storage & JotForm Integration
+- [ ] Add document storage provider options (S3, Google Drive, Dropbox, OneDrive)
+- [ ] Create storage service abstraction layer
+- [ ] Add JotForm integration to Integrations page
+- [ ] Implement document upload/download with selected provider
+- [ ] Add folder structure per property

@@ -40,6 +40,8 @@ export default function Integrations() {
   const [claudeConfig, setClaudeConfig] = useState({ enabled: false, apiKey: "" });
   const [chatgptConfig, setChatgptConfig] = useState({ enabled: false, apiKey: "", model: "gpt-4" });
   const [geminiConfig, setGeminiConfig] = useState({ enabled: false, apiKey: "" });
+  const [storageConfig, setStorageConfig] = useState({ provider: 's3', s3Key: "", s3Secret: "", googleDriveKey: "", dropboxToken: "", oneDriveClientId: "" });
+  const [jotformConfig, setJotformConfig] = useState({ enabled: false, apiKey: "", formIds: "" });
 
   // Find integrations
   const palaceIntegration = integrations?.find(i => i.service === 'palace');
@@ -50,6 +52,8 @@ export default function Integrations() {
   const claudeIntegration = integrations?.find(i => i.service === 'claude');
   const chatgptIntegration = integrations?.find(i => i.service === 'chatgpt');
   const geminiIntegration = integrations?.find(i => i.service === 'gemini');
+  const storageIntegrations = integrations?.filter(i => ['s3', 'google_drive', 'dropbox', 'onedrive'].includes(i.service));
+  const jotformIntegration = integrations?.find(i => i.service === 'jotform');
 
   // Load configs
   useEffect(() => {
