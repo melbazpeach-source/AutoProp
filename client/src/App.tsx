@@ -16,6 +16,7 @@ import Viewings from "./pages/Viewings";
 import Communications from "./pages/Communications";
 import Calendar from "./pages/Calendar";
 import Integrations from "./pages/Integrations";
+import DataImport from "./pages/DataImport";
 
 function Router() {
   return (
@@ -77,6 +78,12 @@ function Router() {
       <Route path={"/calendar"}>
         <DashboardLayout>
           <Calendar />
+        </DashboardLayout>
+      </Route>
+      
+      <Route path={"/data-import"}>
+        <DashboardLayout>
+          <DataImport />
         </DashboardLayout>
       </Route>
       
