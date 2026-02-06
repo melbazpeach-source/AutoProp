@@ -159,3 +159,12 @@
 - [x] Add category/tag assignment to tenants
 - [ ] Build search and filter by categories
 - [ ] Build search and filter by tags
+
+
+## Maintenance Cost Tracking Filters
+- [x] Add property address filter dropdown
+- [ ] Add tenancy filter dropdown
+- [x] Add date range picker (start/end dates)
+- [x] Add maintenance type filter
+- [x] Update backend query to support filters
+- [x] Display filtered cost totals and breakdowns

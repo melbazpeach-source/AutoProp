@@ -44,11 +44,32 @@ export class MaintenanceService {
     return { success: true };
   }
 
-  static async getCostSummary() {
+  static async getCostSummary(filters?: { propertyId?: number; tenancyId?: number; startDate?: string; endDate?: string; category?: string }) {
     const db = await getDb();
-    if (!db) return { total: 0, byMonth: [], byStatus: {} };
+    if (!db) return { total: 0, byMonth: [], byStatus: {}, byProperty: [], byCategory: [] };
     
-    const requests = await db.select().from(maintenanceRequests);
+    let query = db.select().from(maintenanceRequests);
+    
+    // Apply filters
+    if (filters?.propertyId) {
+      query = query.where(eq(maintenanceRequests.propertyId, filters.propertyId)) as any;
+    }
+    if (filters?.category) {
+      query = query.where(eq(maintenanceRequests.category, filters.category as any)) as any;
+    }
+    
+    const requests = await query;
+    
+    // Filter by date range in memory (simpler than SQL date comparison)
+    let filteredRequests = requests;
+    if (filters?.startDate || filters?.endDate) {
+      filteredRequests = requests.filter(r => {
+        const reqDate = new Date(r.createdAt);
+        if (filters.startDate && reqDate < new Date(filters.startDate)) return false;
+        if (filters.endDate && reqDate > new Date(filters.endDate)) return false;
+        return true;
+      });
+    }
     
     const total = requests.reduce((sum, r) => sum + parseFloat(r.estimatedCost || '0'), 0);
     

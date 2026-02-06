@@ -28,7 +28,15 @@ export const appRouter = router({
     reject: protectedProcedure
       .input(z.object({ id: z.number(), rejectedBy: z.number(), reason: z.string() }))
       .mutation(({ input }) => MaintenanceService.reject(input.id, input.rejectedBy, input.reason)),
-    costSummary: protectedProcedure.query(() => MaintenanceService.getCostSummary()),
+    getCostSummary: protectedProcedure
+      .input(z.object({
+        propertyId: z.number().optional(),
+        tenancyId: z.number().optional(),
+        startDate: z.string().optional(),
+        endDate: z.string().optional(),
+        category: z.enum(['plumbing', 'electrical', 'hvac', 'structural', 'appliance', 'landscaping', 'pest_control', 'cleaning', 'other']).optional(),
+      }).optional())
+      .query(async ({ input }) => MaintenanceService.getCostSummary(input)),
   }),
   
   arrears: router({
