@@ -17,6 +17,7 @@ import Communications from "./pages/Communications";
 import Calendar from "./pages/Calendar";
 import Integrations from "./pages/Integrations";
 import DataImport from "./pages/DataImport";
+import Settings from "./pages/Settings";
 
 function Router() {
   return (
@@ -78,6 +79,12 @@ function Router() {
       <Route path={"/calendar"}>
         <DashboardLayout>
           <Calendar />
+        </DashboardLayout>
+      </Route>
+      
+      <Route path={"/settings"}>
+        <DashboardLayout>
+          <Settings />
         </DashboardLayout>
       </Route>
       

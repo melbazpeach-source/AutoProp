@@ -147,3 +147,15 @@
 - [ ] Add JotForm integration to Integrations page
 - [ ] Implement document upload/download with selected provider
 - [ ] Add folder structure per property
+
+
+## Category & Tag Management
+- [x] Create categories table (user-defined categories for properties, maintenance, etc.)
+- [x] Create tags table (flexible tagging system)
+- [x] Add category management UI (add/edit/delete categories)
+- [x] Add tag management UI (add/edit/delete tags)
+- [x] Add category/tag assignment to properties
+- [x] Add category/tag assignment to maintenance requests
+- [x] Add category/tag assignment to tenants
+- [ ] Build search and filter by categories
+- [ ] Build search and filter by tags

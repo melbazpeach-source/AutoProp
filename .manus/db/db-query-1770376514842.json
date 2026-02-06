@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO properties (address, propertyType, status) VALUES ('123 Sample St, Auckland', 'residential', 'occupied');\nSET @propId = LAST_INSERT_ID();\nINSERT INTO maintenanceRequests (propertyId, title, description, category, urgency, status, estimatedCost) VALUES (@propId, 'Leaking Faucet', 'Kitchen faucet dripping.', 'plumbing', 'urgent', 'pending_approval', '350.00'), (@propId, 'Broken Window', 'Window latch broken.', 'structural', 'urgent', 'pending_approval', '280.00'), (@propId, 'HVAC Service', 'Annual maintenance.', 'hvac', 'routine', 'pending_approval', '195.00');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4XXLBfM4ANjsrfS.e6149bea325f --database iDtxVTwj3fkgmEfwuizRVK --execute INSERT INTO properties (address, propertyType, status) VALUES ('123 Sample St, Auckland', 'residential', 'occupied');\nSET @propId = LAST_INSERT_ID();\nINSERT INTO maintenanceRequests (propertyId, title, description, category, urgency, status, estimatedCost) VALUES (@propId, 'Leaking Faucet', 'Kitchen faucet dripping.', 'plumbing', 'urgent', 'pending_approval', '350.00'), (@propId, 'Broken Window', 'Window latch broken.', 'structural', 'urgent', 'pending_approval', '280.00'), (@propId, 'HVAC Service', 'Annual maintenance.', 'hvac', 'routine', 'pending_approval', '195.00');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1976
+}

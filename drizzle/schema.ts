@@ -254,6 +254,62 @@ export type Document = typeof documents.$inferSelect;
 export type InsertDocument = typeof documents.$inferInsert;
 
 /**
+ * User-defined categories
+ */
+export const categories = mysqlTable("categories", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 128 }).notNull(),
+  type: mysqlEnum("type", ["property", "maintenance", "tenant", "general"]).notNull(),
+  color: varchar("color", { length: 7 }), // hex color
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Category = typeof categories.$inferSelect;
+export type InsertCategory = typeof categories.$inferInsert;
+
+/**
+ * Flexible tagging system
+ */
+export const tags = mysqlTable("tags", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 128 }).notNull().unique(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Tag = typeof tags.$inferSelect;
+export type InsertTag = typeof tags.$inferInsert;
+
+/**
+ * Property tags (many-to-many)
+ */
+export const propertyTags = mysqlTable("propertyTags", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").references(() => properties.id).notNull(),
+  tagId: int("tagId").references(() => tags.id).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/**
+ * Maintenance tags (many-to-many)
+ */
+export const maintenanceTags = mysqlTable("maintenanceTags", {
+  id: int("id").autoincrement().primaryKey(),
+  maintenanceRequestId: int("maintenanceRequestId").references(() => maintenanceRequests.id).notNull(),
+  tagId: int("tagId").references(() => tags.id).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/**
+ * Tenant tags (many-to-many)
+ */
+export const tenantTags = mysqlTable("tenantTags", {
+  id: int("id").autoincrement().primaryKey(),
+  tenantId: int("tenantId").references(() => tenants.id).notNull(),
+  tagId: int("tagId").references(() => tags.id).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+/**
  * Notifications for property managers
  */
 export const notifications = mysqlTable("notifications", {

@@ -38,6 +38,7 @@ const menuItems = [
   { icon: MessageSquare, label: "Communications", path: "/communications" },
   { icon: Calendar, label: "Calendar", path: "/calendar" },
   { icon: Upload, label: "Data Import", path: "/data-import" },
+  { icon: Settings, label: "Settings", path: "/settings" },
   { icon: Settings, label: "Integrations", path: "/integrations" },
 ];
 

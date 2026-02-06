@@ -1,6 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
+import { tagsRouter } from "./routers/tags";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -15,6 +16,7 @@ import { getDb } from './db';
 import { nanoid } from "nanoid";
 
 export const appRouter = router({
+  tags: tagsRouter,
   system: systemRouter,
   csv: csvRouter,
   
