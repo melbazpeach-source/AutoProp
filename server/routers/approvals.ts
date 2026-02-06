@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { protectedProcedure, router } from '../_core/trpc';
 import { getDb } from '../db';
 import { communications } from '../../drizzle/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and, gte, lte, like, or, desc } from 'drizzle-orm';
 import { CommunicationsService } from '../communications-service';
 
 export const approvalsRouter = router({
@@ -301,5 +301,58 @@ export const approvalsRouter = router({
         });
       
       return { success: true };
+    }),
+
+  getSent: protectedProcedure
+    .input(z.object({
+      channel: z.enum(['email', 'sms', 'whatsapp', 'all']).optional(),
+      startDate: z.date().optional(),
+      endDate: z.date().optional(),
+      search: z.string().optional(),
+      limit: z.number().min(1).max(100).default(50),
+      offset: z.number().min(0).default(0),
+    }).optional())
+    .query(async ({ input }) => {
+      const db = await getDb();
+      if (!db) return { items: [], total: 0 };
+      
+      const filters = [eq(communications.status, 'sent')];
+      
+      if (input?.channel && input.channel !== 'all') {
+        filters.push(eq(communications.channel, input.channel));
+      }
+      
+      if (input?.startDate) {
+        filters.push(gte(communications.sentAt, input.startDate));
+      }
+      
+      if (input?.endDate) {
+        filters.push(lte(communications.sentAt, input.endDate));
+      }
+      
+      if (input?.search) {
+        filters.push(
+          or(
+            like(communications.toAddress, `%${input.search}%`),
+            like(communications.subject, `%${input.search}%`),
+            like(communications.body, `%${input.search}%`)
+          )!
+        );
+      }
+      
+      const items = await db
+        .select()
+        .from(communications)
+        .where(and(...filters))
+        .orderBy(desc(communications.sentAt))
+        .limit(input?.limit || 50)
+        .offset(input?.offset || 0);
+      
+      const [{ count }] = await db
+        .select({ count: communications.id })
+        .from(communications)
+        .where(and(...filters));
+      
+      return { items, total: count || 0 };
     }),
 });

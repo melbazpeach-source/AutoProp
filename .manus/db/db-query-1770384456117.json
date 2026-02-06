@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO communications (channel, direction, toAddress, subject, body, status, sentAt, createdAt, approvedAt, approvedBy) VALUES \n('email', 'outbound', 'tenant@example.com', 'Rent Payment Confirmation', 'Thank you for your rent payment of $1,500 received on February 1, 2026.', 'sent', '2026-02-01 10:30:00', '2026-02-01 09:00:00', '2026-02-01 09:15:00', 1),\n('sms', 'outbound', '+64212345678', NULL, 'Your maintenance request has been completed. Please check and confirm.', 'sent', '2026-02-03 14:20:00', '2026-02-03 14:00:00', '2026-02-03 14:05:00', 1),\n('email', 'outbound', 'contractor@example.com', 'Invoice Payment - Property Maintenance', 'Invoice #12345 for plumbing repair has been paid. Amount: $450. Thank you.', 'sent', '2026-02-05 16:45:00', '2026-02-05 16:00:00', '2026-02-05 16:30:00', 1);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4XXLBfM4ANjsrfS.e6149bea325f --database iDtxVTwj3fkgmEfwuizRVK --execute INSERT INTO communications (channel, direction, toAddress, subject, body, status, sentAt, createdAt, approvedAt, approvedBy) VALUES \n('email', 'outbound', 'tenant@example.com', 'Rent Payment Confirmation', 'Thank you for your rent payment of $1,500 received on February 1, 2026.', 'sent', '2026-02-01 10:30:00', '2026-02-01 09:00:00', '2026-02-01 09:15:00', 1),\n('sms', 'outbound', '+64212345678', NULL, 'Your maintenance request has been completed. Please check and confirm.', 'sent', '2026-02-03 14:20:00', '2026-02-03 14:00:00', '2026-02-03 14:05:00', 1),\n('email', 'outbound', 'contractor@example.com', 'Invoice Payment - Property Maintenance', 'Invoice #12345 for plumbing repair has been paid. Amount: $450. Thank you.', 'sent', '2026-02-05 16:45:00', '2026-02-05 16:00:00', '2026-02-05 16:30:00', 1);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1548
+}

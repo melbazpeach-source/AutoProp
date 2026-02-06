@@ -21,6 +21,7 @@ import DataImport from "./pages/DataImport";
 import Settings from "./pages/Settings";
 import Templates from "./pages/Templates";
 import Scheduled from "./pages/Scheduled";
+import SentCommunications from "./pages/SentCommunications";
 
 function Router() {
   return (
@@ -111,6 +112,11 @@ function Router() {
       <Route path={"/scheduled"}>
         <DashboardLayout>
           <Scheduled />
+        </DashboardLayout>
+      </Route>
+      <Route path={"/sent"}>
+        <DashboardLayout>
+          <SentCommunications />
         </DashboardLayout>
       </Route>
       

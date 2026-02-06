@@ -284,3 +284,21 @@
 - [x] Add reschedule mutation to backend
 - [x] Test preview dialog functionality
 - [x] Verify scheduled communications removed from approval queue
+
+
+## Sent Communications Archive Page
+- [x] Create backend query to fetch sent communications
+- [x] Add filtering by date range, channel, recipient
+- [x] Add pagination for large datasets
+- [x] Build SentCommunications page component
+- [x] Display communications in table format with sortable columns
+- [x] Show key details: timestamp, recipient, channel, subject, status
+- [x] Add preview button to view full message content
+- [x] Add search functionality by recipient or subject
+- [x] Add date range filter UI
+- [x] Add channel filter (email, sms, whatsapp)
+- [x] Add export to CSV functionality for audit reports
+- [x] Add navigation menu item for Sent Communications
+- [x] Test preview dialog functionality
+- [x] Insert test data for archive testing
+- [x] Verify table displays sent communications correctly
