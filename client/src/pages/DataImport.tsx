@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Upload, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { trpc } from '@/lib/trpc';
 
 type ImportType = 'rent-arrears' | 'maintenance' | 'tenants' | 'tenancies' | 'scheduled-tasks';
 
@@ -43,6 +44,10 @@ export default function DataImport() {
     toast.success('Template downloaded');
   };
 
+  const importMutation = trpc.csv.importRentArrears.useMutation();
+  const importMaintenanceMutation = trpc.csv.importMaintenance.useMutation();
+  const importTenantsMutation = trpc.csv.importTenants.useMutation();
+
   const handleUpload = async () => {
     if (!file) {
       toast.error('Please select a file');
@@ -52,12 +57,21 @@ export default function DataImport() {
     setLoading(true);
     try {
       const text = await file.text();
-      // TODO: Call tRPC endpoint to import CSV
-      // const result = await trpc.csvImport.import.useMutation();
-      toast.success('File uploaded successfully');
-      setResult({ success: true, rows: 10 });
+      let res;
+      if (activeTab === 'rent-arrears') res = await importMutation.mutateAsync({ csvContent: text });
+      else if (activeTab === 'maintenance') res = await importMaintenanceMutation.mutateAsync({ csvContent: text });
+      else if (activeTab === 'tenants') res = await importTenantsMutation.mutateAsync({ csvContent: text });
+      
+      if (res?.success && res.summary) {
+        toast.success(`Imported ${res.summary.successfulRows} rows`);
+        setResult({ success: true, rows: res.summary.successfulRows });
+      } else {
+        toast.error('Import failed');
+        setResult({ success: false, error: 'Validation errors' });
+      }
     } catch (error) {
       toast.error('Upload failed');
+      setResult({ success: false, error: String(error) });
     } finally {
       setLoading(false);
     }

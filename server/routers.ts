@@ -6,10 +6,12 @@ import { z } from "zod";
 import * as db from "./db";
 import { palaceSyncService } from "./palace-sync";
 import { communicationsService } from "./communications-service";
+import { csvRouter } from "./routers/csv";
 import { nanoid } from "nanoid";
 
 export const appRouter = router({
   system: systemRouter,
+  csv: csvRouter,
   
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
