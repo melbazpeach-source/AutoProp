@@ -419,3 +419,48 @@ export const emailTemplates = mysqlTable("emailTemplates", {
 
 export type EmailTemplate = typeof emailTemplates.$inferSelect;
 export type InsertEmailTemplate = typeof emailTemplates.$inferInsert;
+
+/**
+ * Tenancies - linking tenants to properties with management features
+ */
+export const tenancies = mysqlTable("tenancies", {
+  id: int("id").autoincrement().primaryKey(),
+  propertyId: int("propertyId").references(() => properties.id).notNull(),
+  tenantId: int("tenantId").references(() => tenants.id).notNull(),
+  leaseStartDate: timestamp("leaseStartDate").notNull(),
+  leaseEndDate: timestamp("leaseEndDate"),
+  weeklyRent: decimal("weeklyRent", { precision: 10, scale: 2 }).notNull(),
+  bondAmount: decimal("bondAmount", { precision: 10, scale: 2 }),
+  status: mysqlEnum("status", ["active", "ending", "terminated", "completed"]).default("active").notNull(),
+  tags: text("tags"), // JSON array of tag strings for filtering
+  isFlagged: boolean("isFlagged").default(false), // Mark as important
+  isPinned: boolean("isPinned").default(false), // Pin to top of list
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Tenancy = typeof tenancies.$inferSelect;
+export type InsertTenancy = typeof tenancies.$inferInsert;
+
+/**
+ * Tenancy alerts for tracking important events
+ */
+export const tenancyAlerts = mysqlTable("tenancyAlerts", {
+  id: int("id").autoincrement().primaryKey(),
+  tenancyId: int("tenancyId").references(() => tenancies.id).notNull(),
+  alertType: mysqlEnum("alertType", ["antisocial_behavior", "court_hearing", "complaint", "terminate", "rent_arrears", "breach_notice", "inspection_due", "lease_expiry", "other"]).notNull(),
+  title: varchar("title", { length: 256 }).notNull(),
+  description: text("description"),
+  dueDate: timestamp("dueDate"),
+  priority: mysqlEnum("priority", ["low", "medium", "high", "urgent"]).default("medium").notNull(),
+  status: mysqlEnum("status", ["active", "resolved", "dismissed"]).default("active").notNull(),
+  createdBy: int("createdBy").references(() => users.id),
+  resolvedBy: int("resolvedBy").references(() => users.id),
+  resolvedAt: timestamp("resolvedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type TenancyAlert = typeof tenancyAlerts.$inferSelect;
+export type InsertTenancyAlert = typeof tenancyAlerts.$inferInsert;

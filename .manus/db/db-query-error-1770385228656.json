@@ -1,0 +1,8 @@
+{
+  "query": "INSERT INTO tenancies (propertyId, tenantId, leaseStartDate, leaseEndDate, weeklyRent, bondAmount, status, tags, isFlagged, isPinned, notes) VALUES \n(1, 1, '2025-01-01', '2026-01-01', '450.00', '1800.00', 'active', '[\"long-term\", \"reliable\"]', true, true, 'Excellent tenant, always pays on time'),\n(1, 2, '2024-06-01', '2025-06-01', '420.00', '1680.00', 'ending', '[\"short-term\"]', false, false, 'Lease ending soon, need to discuss renewal');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4XXLBfM4ANjsrfS.e6149bea325f --database iDtxVTwj3fkgmEfwuizRVK --execute INSERT INTO tenancies (propertyId, tenantId, leaseStartDate, leaseEndDate, weeklyRent, bondAmount, status, tags, isFlagged, isPinned, notes) VALUES \n(1, 1, '2025-01-01', '2026-01-01', '450.00', '1800.00', 'active', '[\"long-term\", \"reliable\"]', true, true, 'Excellent tenant, always pays on time'),\n(1, 2, '2024-06-01', '2025-06-01', '420.00', '1680.00', 'ending', '[\"short-term\"]', false, false, 'Lease ending soon, need to discuss renewal');",
+  "returncode": 1,
+  "logs": [
+    "ERROR 1452 (23000) at line 1: Cannot add or update a child row: a foreign key constraint fails (`idtxvtwj3fkgmefwuizrvk`.`tenancies`, CONSTRAINT `tenancies_tenantId_tenants_id_fk` FOREIGN KEY (`tenantId`) REFERENCES `tenants` (`id`) ON DELETE NO ACTION ON UPDATE NO ACTION)"
+  ]
+}

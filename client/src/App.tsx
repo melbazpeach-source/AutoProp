@@ -22,6 +22,7 @@ import Settings from "./pages/Settings";
 import Templates from "./pages/Templates";
 import Scheduled from "./pages/Scheduled";
 import SentCommunications from "./pages/SentCommunications";
+import Tenancies from "./pages/Tenancies";
 
 function Router() {
   return (
@@ -35,6 +36,12 @@ function Router() {
       <Route path={"/properties"}>
         <DashboardLayout>
           <Properties />
+        </DashboardLayout>
+      </Route>
+      
+      <Route path={"/tenancies"}>
+        <DashboardLayout>
+          <Tenancies />
         </DashboardLayout>
       </Route>
       

@@ -1,0 +1,20 @@
+{
+  "query": "SELECT id, firstName, lastName FROM tenants LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4XXLBfM4ANjsrfS.e6149bea325f --database iDtxVTwj3fkgmEfwuizRVK --execute SELECT id, firstName, lastName FROM tenants LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "firstName": "John",
+      "lastName": "Smith"
+    },
+    {
+      "id": "2",
+      "firstName": "Sarah",
+      "lastName": "Johnson"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tfirstName\tlastName\n1\tJohn\tSmith\n2\tSarah\tJohnson\n",
+  "stderr": "",
+  "execution_time_ms": 1500
+}

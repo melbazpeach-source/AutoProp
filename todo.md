@@ -302,3 +302,29 @@
 - [x] Test preview dialog functionality
 - [x] Insert test data for archive testing
 - [x] Verify table displays sent communications correctly
+
+
+## Tenancies Management Page
+- [x] Design tenancies database schema with property and tenant relationships
+- [x] Create tenancies table with tags, flags, pins, and alerts fields
+- [x] Add tenancy_alerts table for tracking multiple alerts per tenancy
+- [x] Create tenancies router with CRUD endpoints
+- [x] Build Tenancies page component with table view
+- [x] Add CSV import functionality for bulk tenancy data
+- [x] Add CSV export functionality for reporting
+- [x] Implement tagging system with predefined and custom tags
+- [x] Add tag-based filtering and search
+- [x] Implement flagging system for marking important tenancies
+- [x] Implement pinning system for watching specific tenancies
+- [x] Create alerts management UI with 9 alert types (antisocial behavior, court hearing, complaints, terminate, rent arrears, breach notice, inspection due, lease expiry, other)
+- [x] Add alert creation dialog with type, title, description, priority, and due date
+- [x] Add navigation menu item between Properties and Tenants
+- [x] Insert test tenancy data
+- [x] Test table display with tags, flags, and pins
+- [x] Test alerts dialog and alert type selection
+- [ ] Complete alert creation form testing
+- [ ] Add alert editing and deletion functionality
+- [ ] Add alert status tracking (active, resolved, dismissed)
+- [ ] Show pinned tenancies at the top of the list
+- [ ] Add bulk operations (tag, flag, export selected)
+- [ ] Test CSV import/export functionality

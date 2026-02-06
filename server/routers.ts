@@ -4,6 +4,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { tagsRouter } from "./routers/tags";
 import { approvalsRouter } from "./routers/approvals";
 import { templatesRouter } from "./routers/templates";
+import { tenanciesRouter } from "./routers/tenancies";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -23,6 +24,7 @@ export const appRouter = router({
   csv: csvRouter,
   approvals: approvalsRouter,
   templates: templatesRouter,
+  tenancies: tenanciesRouter,
   
   maintenance: router({
     pendingApprovals: protectedProcedure.query(() => MaintenanceService.getPendingApprovals()),

@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/sidebar";
 import { getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users, Building2, AlertCircle, Wrench, Calendar, MessageSquare, Settings, Upload, CheckCircle, FileText, Clock, Archive } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, Building2, AlertCircle, Wrench, Calendar, MessageSquare, Settings, Upload, CheckCircle, FileText, Clock, Archive, Link } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
@@ -30,6 +30,7 @@ import { Button } from "./ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
   { icon: Building2, label: "Properties", path: "/properties" },
+  { icon: Link, label: "Tenancies", path: "/tenancies" },
   { icon: Users, label: "Tenants", path: "/tenants" },
   { icon: MessageSquare, label: "Tickets", path: "/tickets" },
   { icon: AlertCircle, label: "Rent Arrears", path: "/rent-arrears" },

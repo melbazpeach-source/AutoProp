@@ -1,0 +1,9 @@
+{
+  "query": "INSERT INTO tenancies (propertyId, tenantId, leaseStartDate, leaseEndDate, weeklyRent, bondAmount, status, tags, isFlagged, isPinned, notes) VALUES \n(1, (SELECT id FROM tenants WHERE firstName='John' LIMIT 1), '2025-01-01', '2026-01-01', '450.00', '1800.00', 'active', '[\"long-term\", \"reliable\"]', true, true, 'Excellent tenant, always pays on time'),\n(1, (SELECT id FROM tenants WHERE firstName='Sarah' LIMIT 1), '2024-06-01', '2025-06-01', '420.00', '1680.00', 'ending', '[\"short-term\"]', false, false, 'Lease ending soon, need to discuss renewal');",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4XXLBfM4ANjsrfS.e6149bea325f --database iDtxVTwj3fkgmEfwuizRVK --execute INSERT INTO tenancies (propertyId, tenantId, leaseStartDate, leaseEndDate, weeklyRent, bondAmount, status, tags, isFlagged, isPinned, notes) VALUES \n(1, (SELECT id FROM tenants WHERE firstName='John' LIMIT 1), '2025-01-01', '2026-01-01', '450.00', '1800.00', 'active', '[\"long-term\", \"reliable\"]', true, true, 'Excellent tenant, always pays on time'),\n(1, (SELECT id FROM tenants WHERE firstName='Sarah' LIMIT 1), '2024-06-01', '2025-06-01', '420.00', '1680.00', 'ending', '[\"short-term\"]', false, false, 'Lease ending soon, need to discuss renewal');",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1528
+}
