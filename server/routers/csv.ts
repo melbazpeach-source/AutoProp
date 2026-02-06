@@ -95,4 +95,25 @@ export const csvRouter = router({
       template: CSVService.generateTemplate(input),
       example: CSVService.generateExampleData(input),
     })),
+
+  exportRentArrears: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { data: [] };
+    const data = await db.select().from(rentArrears);
+    return { data };
+  }),
+
+  exportMaintenance: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { data: [] };
+    const data = await db.select().from(maintenanceRequests);
+    return { data };
+  }),
+
+  exportTenants: protectedProcedure.query(async () => {
+    const db = await getDb();
+    if (!db) return { data: [] };
+    const data = await db.select().from(tenants);
+    return { data };
+  }),
 });

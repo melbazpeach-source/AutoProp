@@ -44,9 +44,35 @@ export default function DataImport() {
     toast.success('Template downloaded');
   };
 
+  const handleExport = () => {
+    let data: any[] = [];
+    if (activeTab === 'rent-arrears') data = rentArrearsData?.data || [];
+    else if (activeTab === 'maintenance') data = maintenanceData?.data || [];
+    else if (activeTab === 'tenants') data = tenantsData?.data || [];
+    
+    if (data.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+    
+    const headers = Object.keys(data[0]).join(',');
+    const rows = data.map(r => Object.values(r).join(','));
+    const csv = [headers, ...rows].join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${activeTab}-export.csv`;
+    a.click();
+    toast.success(`Exported ${data.length} rows`);
+  };
+
   const importMutation = trpc.csv.importRentArrears.useMutation();
   const importMaintenanceMutation = trpc.csv.importMaintenance.useMutation();
   const importTenantsMutation = trpc.csv.importTenants.useMutation();
+  const { data: rentArrearsData } = trpc.csv.exportRentArrears.useQuery();
+  const { data: maintenanceData } = trpc.csv.exportMaintenance.useQuery();
+  const { data: tenantsData } = trpc.csv.exportTenants.useQuery();
 
   const handleUpload = async () => {
     if (!file) {
@@ -103,6 +129,10 @@ export default function DataImport() {
                   <Button variant="outline" onClick={handleDownloadTemplate}>
                     <Download className="w-4 h-4 mr-2" />
                     Download Template
+                  </Button>
+                  <Button variant="outline" onClick={handleExport}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Data
                   </Button>
                 </div>
 
