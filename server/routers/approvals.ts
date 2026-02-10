@@ -1,19 +1,26 @@
 import { z } from 'zod';
 import { protectedProcedure, router } from '../_core/trpc';
 import { getDb } from '../db';
-import { communications } from '../../drizzle/schema';
+import { communications, viewings } from '../../drizzle/schema';
 import { eq, and, gte, lte, like, or, desc } from 'drizzle-orm';
 import { CommunicationsService } from '../communications-service';
 
 export const approvalsRouter = router({
   getPending: protectedProcedure.query(async () => {
     const db = await getDb();
-    if (!db) return [];
+    if (!db) return { communications: [], viewings: [] };
     
-    return await db
+    const pendingComms = await db
       .select()
       .from(communications)
       .where(eq(communications.status, 'pending_approval'));
+    
+    const pendingViewings = await db
+      .select()
+      .from(viewings)
+      .where(eq(viewings.status, 'pending_approval'));
+    
+    return { communications: pendingComms, viewings: pendingViewings };
   }),
 
   approve: protectedProcedure

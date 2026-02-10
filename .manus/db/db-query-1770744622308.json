@@ -1,0 +1,19 @@
+{
+  "query": "SELECT id, slotType, startTime, endTime, available, propertyId, notes FROM calendarSlots ORDER BY startTime DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 4XXLBfM4ANjsrfS.e6149bea325f --database iDtxVTwj3fkgmEfwuizRVK --execute SELECT id, slotType, startTime, endTime, available, propertyId, notes FROM calendarSlots ORDER BY startTime DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "1",
+      "slotType": "viewing",
+      "startTime": "2026-02-12 14:00:00",
+      "endTime": "2026-02-12 15:00:00",
+      "available": "1",
+      "propertyId": "NULL",
+      "notes": "NULL"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tslotType\tstartTime\tendTime\tavailable\tpropertyId\tnotes\n1\tviewing\t2026-02-12 14:00:00\t2026-02-12 15:00:00\t1\tNULL\tNULL\n",
+  "stderr": "",
+  "execution_time_ms": 2540
+}

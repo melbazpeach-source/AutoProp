@@ -371,13 +371,45 @@ export const appRouter = router({
           approvedAt: new Date(),
         });
       }),
+
+    createBooking: publicProcedure
+      .input(z.object({
+        slotId: z.number(),
+        prospectName: z.string(),
+        prospectEmail: z.string().email(),
+        prospectPhone: z.string(),
+        propertyId: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        // Get the slot details
+        const slot = await db.getCalendarSlotById(input.slotId);
+        if (!slot || !slot.available) {
+          throw new Error('This time slot is no longer available');
+        }
+
+        // Create viewing request
+        const viewing = await db.createViewing({
+          propertyId: input.propertyId || slot.propertyId || 0,
+          prospectName: input.prospectName,
+          prospectEmail: input.prospectEmail,
+          prospectPhone: input.prospectPhone,
+          scheduledDate: slot.startTime,
+          duration: Math.floor((new Date(slot.endTime).getTime() - new Date(slot.startTime).getTime()) / 60000),
+          status: 'pending_approval',
+        });
+
+        // Mark slot as unavailable
+        await db.updateCalendarSlot(input.slotId, { available: false });
+
+        return viewing;
+      }),
   }),
 
   // ============================================================================
   // Calendar Slots
   // ============================================================================
   calendar: router({
-    availableSlots: protectedProcedure
+    availableSlots: publicProcedure
       .input(z.object({
         slotType: z.enum(['viewing', 'maintenance', 'inspection']),
         startDate: z.date(),
@@ -385,6 +417,15 @@ export const appRouter = router({
       }))
       .query(async ({ input }) => {
         return await db.getAvailableSlots(input.slotType, input.startDate, input.endDate);
+      }),
+
+    getSlots: protectedProcedure
+      .input(z.object({
+        startDate: z.string(),
+        endDate: z.string(),
+      }))
+      .query(async ({ input }) => {
+        return await db.getAllCalendarSlots(new Date(input.startDate), new Date(input.endDate));
       }),
 
     createSlot: protectedProcedure
@@ -401,6 +442,12 @@ export const appRouter = router({
           available: true,
           allocatedBy: ctx.user.id,
         });
+      }),
+
+    deleteSlot: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        return await db.deleteCalendarSlot(input.id);
       }),
   }),
 

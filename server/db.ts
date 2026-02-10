@@ -1,4 +1,4 @@
-import { eq, and, gte, desc, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { 
   InsertUser, users, 
@@ -458,9 +458,35 @@ export async function getAvailableSlots(slotType: CalendarSlot['slotType'], star
         eq(calendarSlots.slotType, slotType),
         eq(calendarSlots.available, true),
         gte(calendarSlots.startTime, startDate),
-        sql`${calendarSlots.endTime} <= ${endDate}`
+        lte(calendarSlots.endTime, endDate)
       )
     );
+}
+
+export async function getAllCalendarSlots(startDate: Date, endDate: Date) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(calendarSlots)
+    .where(
+      and(
+        gte(calendarSlots.startTime, startDate),
+        sql`${calendarSlots.endTime} <= ${endDate}`
+      )
+    )
+    .orderBy(calendarSlots.startTime);
+}
+
+export async function deleteCalendarSlot(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  return await db.delete(calendarSlots).where(eq(calendarSlots.id, id));
+}
+
+export async function getCalendarSlotById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  const results = await db.select().from(calendarSlots).where(eq(calendarSlots.id, id)).limit(1);
+  return results[0] || null;
 }
 
 // ============================================================================

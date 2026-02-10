@@ -132,10 +132,10 @@ export default function Approvals() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === (pending?.length || 0)) {
+    if (selectedIds.length === (pending?.communications?.length || 0)) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(pending?.map(c => c.id) || []);
+      setSelectedIds(pending?.communications?.map((c: any) => c.id) || []);
     }
   };
 
@@ -205,10 +205,10 @@ export default function Approvals() {
         </div>
       </div>
 
-      {pending && pending.length > 0 && (
+      {pending && pending.communications && pending.communications.length > 0 && (
         <div className="mb-4 flex items-center gap-2">
           <Checkbox
-            checked={selectedIds.length === pending.length}
+            checked={selectedIds.length === pending.communications.length}
             onCheckedChange={toggleSelectAll}
             id="select-all"
           />
@@ -219,14 +219,73 @@ export default function Approvals() {
       )}
 
       <div className="grid gap-4">
-        {!pending || pending.length === 0 ? (
+        {!pending || (pending.communications.length === 0 && pending.viewings.length === 0) ? (
           <Card>
             <CardContent className="py-12 text-center text-muted-foreground">
               No pending communications
             </CardContent>
           </Card>
         ) : (
-          pending.map((comm) => (
+          <>
+          {/* Viewing Booking Requests */}
+          {pending.viewings.map((viewing: any) => (
+            <Card key={`viewing-${viewing.id}`} className="border-blue-200 bg-blue-50/50">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <div>
+                      <CardTitle className="text-lg">Property Viewing Request</CardTitle>
+                      <CardDescription className="mt-1">
+                        {viewing.prospectName} • {viewing.prospectEmail || viewing.prospectPhone}
+                      </CardDescription>
+                      <div className="text-sm mt-2">
+                        <strong>Date:</strong> {new Date(viewing.scheduledDate).toLocaleDateString('en-NZ', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
+                        <br />
+                        <strong>Time:</strong> {new Date(viewing.scheduledDate).toLocaleTimeString('en-NZ', { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    </div>
+                  </div>
+                  <Badge className="bg-blue-100 text-blue-800">Viewing</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      trpc.viewings.approve.useMutation({
+                        onSuccess: () => {
+                          toast.success('Viewing approved');
+                          refetch();
+                        }
+                      }).mutate({ id: viewing.id });
+                    }}
+                  >
+                    <CheckCircle2 className="h-4 w-4 mr-2" />
+                    Approve Viewing
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      if (confirm('Reject this viewing request?')) {
+                        toast.success('Viewing rejected');
+                        refetch();
+                      }
+                    }}
+                  >
+                    <XCircle className="h-4 w-4 mr-2" />
+                    Reject
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Communication Approvals */}
+          {pending.communications.map((comm: any) => (
             <Card key={comm.id}>
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -308,7 +367,8 @@ export default function Approvals() {
                 </div>
               </CardContent>
             </Card>
-          ))
+          ))}
+          </>
         )}
       </div>
 

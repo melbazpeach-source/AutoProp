@@ -25,10 +25,16 @@ import SentCommunications from "./pages/SentCommunications";
 import Tenancies from "./pages/Tenancies";
 import Alerts from "./pages/Alerts";
 import TenancyTimeline from "./pages/TenancyTimeline";
+import BookViewing from "./pages/BookViewing";
 
 function Router() {
   return (
     <Switch>
+      {/* Public booking page - no dashboard layout */}
+      <Route path={"/book-viewing"}>
+        <BookViewing />
+      </Route>
+
       <Route path={"/"}>
         <DashboardLayout>
           <Home />

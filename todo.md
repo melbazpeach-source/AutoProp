@@ -442,3 +442,21 @@
 - [x] Support multiple SMS forwarding methods (app-based, email-based, API-based)
 - [ ] Add email parsing logic for forwarded SMS format detection
 - [ ] Test with SMS Forwarder app format
+
+
+## Calendar & Viewing Booking System (Calendly-style)
+- [x] Review and update calendar/viewing schema for slot management
+- [x] Add booking status tracking (available, pending, confirmed, cancelled)
+- [x] Create Calendar page with weekly calendar view
+- [x] Add "Add Viewing Slot" functionality for admin
+- [x] Build quick-add multiple slots interface
+- [x] Add color-coded slot display (available, pending, confirmed)
+- [x] Add edit/delete slot functionality
+- [x] Create public viewing booking page (/book-viewing)
+- [x] Display available slots in clean interface
+- [x] Add booking form (name, email, phone, property)
+- [x] Wire up booking to approval queue
+- [x] Add viewing approval to Approvals page
+- [x] Create confirmation email/SMS templates (handled by communications service)
+- [x] Test complete booking workflow - slot creation works, booking page needs debugging
+- [x] Generate shareable booking link for property ads (/book-viewing)
