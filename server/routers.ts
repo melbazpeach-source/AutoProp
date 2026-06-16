@@ -5,6 +5,7 @@ import { tagsRouter } from "./routers/tags";
 import { approvalsRouter } from "./routers/approvals";
 import { templatesRouter } from "./routers/templates";
 import { tenanciesRouter } from "./routers/tenancies";
+import { invoicesRouter } from "./routers/invoices"; // [graft] recovered invoice system
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
@@ -25,7 +26,8 @@ export const appRouter = router({
   approvals: approvalsRouter,
   templates: templatesRouter,
   tenancies: tenanciesRouter,
-  
+  invoices: invoicesRouter, // [graft] recovered invoice system
+
   maintenance: router({
     pendingApprovals: protectedProcedure.query(() => MaintenanceService.getPendingApprovals()),
     approve: protectedProcedure
