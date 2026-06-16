@@ -26,6 +26,7 @@ import Tenancies from "./pages/Tenancies";
 import Alerts from "./pages/Alerts";
 import TenancyTimeline from "./pages/TenancyTimeline";
 import BookViewing from "./pages/BookViewing";
+import Invoices from "./pages/Invoices"; // [graft] recovered invoice system
 
 function Router() {
   return (
@@ -33,6 +34,13 @@ function Router() {
       {/* Public booking page - no dashboard layout */}
       <Route path={"/book-viewing"}>
         <BookViewing />
+      </Route>
+
+      {/* [graft] recovered invoice system */}
+      <Route path={"/invoices"}>
+        <DashboardLayout>
+          <Invoices />
+        </DashboardLayout>
       </Route>
 
       <Route path={"/"}>

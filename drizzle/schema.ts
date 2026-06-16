@@ -492,3 +492,69 @@ export const tenancyAlerts = mysqlTable("tenancyAlerts", {
 
 export type TenancyAlert = typeof tenancyAlerts.$inferSelect;
 export type InsertTenancyAlert = typeof tenancyAlerts.$inferInsert;
+
+// ============================================================================
+// [graft] RECOVERED INVOICE SYSTEM (Vanessa's work) — appended additively.
+// Reconstructed to preserve Vanessa's invoice table shape: the recovered
+// Schema.ts.md was an OLD snapshot that predated invoicing, so the table
+// definitions below are rebuilt from the field set documented in the graft
+// brief and the exact columns referenced by the recovered tRPC router,
+// OCR service and matching service. Conventions (int autoincrement PK,
+// mysqlEnum, decimal precision/scale, timestamp defaults) match the
+// existing tables in this file.
+// ============================================================================
+
+/**
+ * Invoices received from contractors (OCR-extracted + auto-matched to maintenance)
+ */
+export const invoices = mysqlTable("invoices", {
+  id: int("id").autoincrement().primaryKey(),
+  invoiceNumber: varchar("invoiceNumber", { length: 128 }).notNull().unique(),
+  contractorName: varchar("contractorName", { length: 256 }).notNull(),
+  contractorEmail: varchar("contractorEmail", { length: 320 }),
+  contractorPhone: varchar("contractorPhone", { length: 32 }),
+  invoiceDate: timestamp("invoiceDate"),
+  dueDate: timestamp("dueDate"),
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }),
+  gstAmount: decimal("gstAmount", { precision: 10, scale: 2 }),
+  totalAmount: decimal("totalAmount", { precision: 10, scale: 2 }).notNull(),
+  description: text("description"),
+  documentUrl: text("documentUrl"),
+  ocrExtractedData: text("ocrExtractedData"), // JSON of OCRExtractedData
+  matchedMaintenanceId: int("matchedMaintenanceId").references(() => maintenanceRequests.id),
+  matchConfidence: decimal("matchConfidence", { precision: 5, scale: 2 }), // 0-100
+  discrepancies: text("discrepancies"), // JSON array of discrepancy strings
+  status: mysqlEnum("status", ["pending", "received", "under_review", "approved", "rejected", "paid", "overdue"]).default("pending").notNull(),
+  paymentStatus: mysqlEnum("paymentStatus", ["unpaid", "partial", "paid"]).default("unpaid").notNull(),
+  amountPaid: decimal("amountPaid", { precision: 10, scale: 2 }).default("0"),
+  paymentDate: timestamp("paymentDate"),
+  paymentMethod: varchar("paymentMethod", { length: 64 }),
+  paymentReference: varchar("paymentReference", { length: 256 }),
+  approvedBy: int("approvedBy").references(() => users.id),
+  approvedAt: timestamp("approvedAt"),
+  rejectedBy: int("rejectedBy").references(() => users.id),
+  rejectedAt: timestamp("rejectedAt"),
+  rejectionReason: text("rejectionReason"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Invoice = typeof invoices.$inferSelect;
+export type InsertInvoice = typeof invoices.$inferInsert;
+
+/**
+ * Line items belonging to an invoice
+ */
+export const invoiceLineItems = mysqlTable("invoiceLineItems", {
+  id: int("id").autoincrement().primaryKey(),
+  invoiceId: int("invoiceId").notNull().references(() => invoices.id),
+  description: text("description").notNull(),
+  quantity: decimal("quantity", { precision: 10, scale: 2 }),
+  unitPrice: decimal("unitPrice", { precision: 10, scale: 2 }),
+  lineTotal: decimal("lineTotal", { precision: 10, scale: 2 }),
+  category: varchar("category", { length: 64 }), // labour|materials|equipment|other
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type InvoiceLineItem = typeof invoiceLineItems.$inferSelect;
+export type InsertInvoiceLineItem = typeof invoiceLineItems.$inferInsert;
