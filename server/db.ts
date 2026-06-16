@@ -1,5 +1,6 @@
 import { eq, and, gte, lte, desc, sql } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle, type MySql2Database } from "drizzle-orm/mysql2";
+import mysql from "mysql2/promise";
 import { 
   InsertUser, users, 
   properties, InsertProperty, Property,
@@ -18,12 +19,17 @@ import {
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
-let _db: ReturnType<typeof drizzle> | null = null;
+let _db: MySql2Database<Record<string, never>> | null = null;
 
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      // Force the mysql2 driver to UTC ("Z"). Without this, mysql2 defaults to the
+      // host's local timezone when converting JS Dates <-> TIMESTAMP columns, so
+      // calendar slots round-trip with an offset and the "startTime >= now" filter
+      // silently drops same-day/near-future viewing slots. UTC makes it deterministic.
+      const pool = mysql.createPool({ uri: process.env.DATABASE_URL, timezone: "Z" });
+      _db = drizzle(pool);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;

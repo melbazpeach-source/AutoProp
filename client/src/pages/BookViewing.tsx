@@ -19,10 +19,14 @@ export default function BookViewing() {
   });
   const [bookingComplete, setBookingComplete] = useState(false);
 
-  // Get available viewing slots for next 30 days
+  // Get available viewing slots for the next 30 days.
+  // Start at the beginning of today (not the current instant) so slots earlier in
+  // today still appear, and extend to the end of the final day to catch boundary slots.
   const startDate = new Date();
+  startDate.setHours(0, 0, 0, 0);
   const endDate = new Date();
   endDate.setDate(endDate.getDate() + 30);
+  endDate.setHours(23, 59, 59, 999);
 
   const { data: slots } = trpc.calendar.availableSlots.useQuery({
     slotType: "viewing",
