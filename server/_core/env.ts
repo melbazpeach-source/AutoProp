@@ -7,4 +7,10 @@ export const ENV = {
   isProduction: process.env.NODE_ENV === "production",
   forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
   forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? "",
+  // [webhook] Active inbound messaging provider (swap point) + generic webhook secret.
+  activeSmsProvider: process.env.ACTIVE_SMS_PROVIDER ?? "vonage",
+  vonageWebhookSecret: process.env.VONAGE_WEBHOOK_SECRET ?? "",
+  // [webhook] Dev-only escape hatch to accept UNVERIFIED inbound webhooks when no
+  // signing secret is set. Ignored in production (webhooks fail closed there).
+  allowUnverifiedWebhooks: process.env.ALLOW_UNVERIFIED_WEBHOOKS === "true",
 };
