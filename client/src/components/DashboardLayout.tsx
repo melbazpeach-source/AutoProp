@@ -26,6 +26,7 @@ import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
+import NotificationBell from "./NotificationBell"; // [trio] Stream 2
 
 const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/" },
@@ -43,6 +44,7 @@ const menuItems = [
   { icon: Clock, label: "Scheduled", path: "/scheduled" },
   { icon: Archive, label: "Sent", path: "/sent" },
   { icon: FileText, label: "Templates", path: "/templates" },
+  { icon: FileText, label: "Documents", path: "/documents" }, // [trio] Stream 3
   { icon: Upload, label: "Data Import", path: "/data-import" },
   { icon: Settings, label: "Settings", path: "/settings" },
   { icon: Settings, label: "Integrations", path: "/integrations" },
@@ -259,7 +261,7 @@ function DashboardLayoutContent({
       </div>
 
       <SidebarInset>
-        {isMobile && (
+        {isMobile ? (
           <div className="flex border-b h-14 items-center justify-between bg-background/95 px-2 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="h-9 w-9 rounded-lg bg-background" />
@@ -271,6 +273,13 @@ function DashboardLayoutContent({
                 </div>
               </div>
             </div>
+            {/* [trio] Stream 2 — notification bell on mobile header */}
+            <NotificationBell />
+          </div>
+        ) : (
+          /* [trio] Stream 2 — slim desktop header with notification bell */
+          <div className="flex border-b h-14 items-center justify-end bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:backdrop-blur sticky top-0 z-40">
+            <NotificationBell />
           </div>
         )}
         <main className="flex-1 p-4">{children}</main>

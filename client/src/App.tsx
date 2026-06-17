@@ -26,6 +26,7 @@ import Tenancies from "./pages/Tenancies";
 import Alerts from "./pages/Alerts";
 import TenancyTimeline from "./pages/TenancyTimeline";
 import BookViewing from "./pages/BookViewing";
+import Documents from "./pages/Documents"; // [trio] Stream 3
 
 function Router() {
   return (
@@ -152,7 +153,14 @@ function Router() {
           <Templates />
         </DashboardLayout>
       </Route>
-      
+
+      {/* [trio] Stream 3 — documents */}
+      <Route path={"/documents"}>
+        <DashboardLayout>
+          <Documents />
+        </DashboardLayout>
+      </Route>
+
       <Route component={NotFound} />
     </Switch>
   );

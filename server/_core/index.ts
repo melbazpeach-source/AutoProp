@@ -8,7 +8,7 @@ import { registerWebhookRoutes } from "../webhooks";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { scheduleAlertChecks } from "../alert-triggers";
+import { scheduleAlertChecks, scheduleNineAmJobs } from "../alert-triggers"; // [trio] Stream 1
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -79,6 +79,8 @@ async function startServer() {
     
     // Initialize automated alert triggers
     scheduleAlertChecks();
+    // [trio] Stream 1 — schedule 9am arrears chase + daily summary jobs
+    scheduleNineAmJobs();
   });
 }
 
