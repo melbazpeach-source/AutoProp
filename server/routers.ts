@@ -17,6 +17,11 @@ import { rentArrears, tenants, properties } from '../drizzle/schema';
 import { eq } from 'drizzle-orm';
 import { getDb } from './db';
 import { nanoid } from "nanoid";
+// [trio] Stream 1 — manual triggers for scheduled jobs
+import { runArrearsChase, runDailySummary } from './alert-triggers';
+// [trio] Stream 3 — document upload/download
+import { storagePut } from './storage';
+import { DocumentStorageService } from './document-storage-service';
 
 export const appRouter = router({
   tags: tagsRouter,
@@ -59,6 +64,9 @@ export const appRouter = router({
         return { letter };
       }),
     getDailySummary: protectedProcedure.query(() => ArrearsService.getDailySummary()),
+    // [trio] Stream 1 — manual triggers for the scheduled 9am jobs (testing)
+    runChaseNow: protectedProcedure.mutation(() => runArrearsChase()),
+    runDailySummaryNow: protectedProcedure.mutation(() => runDailySummary()),
   }),
   
   auth: router({
@@ -463,6 +471,67 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input }) => {
         return await db.markNotificationAsRead(input.id);
+      }),
+  }),
+
+  // ============================================================================
+  // Documents — [trio] Stream 3
+  // ============================================================================
+  documents: router({
+    upload: protectedProcedure
+      .input(z.object({
+        fileName: z.string(),
+        mimeType: z.string(),
+        fileBase64: z.string(),
+        documentType: z.enum([
+          'application',
+          'lease',
+          'breach_letter',
+          'maintenance_report',
+          'inspection',
+          'communication_attachment',
+          'other',
+        ]),
+        propertyId: z.number().optional(),
+        tenantId: z.number().optional(),
+        ticketId: z.number().optional(),
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const buf = Buffer.from(input.fileBase64, 'base64');
+        // [trio] Sanitize the filename before it enters the storage key — prevents
+        // path traversal (e.g. "../../secret"). Original name kept only for display.
+        const safeName = (input.fileName.split(/[\\/]/).pop() || "file").replace(/[^A-Za-z0-9._-]/g, "_");
+        const fileKey = `documents/${input.documentType}/${Date.now()}-${safeName}`;
+        const { url } = await storagePut(fileKey, buf, input.mimeType);
+        return await db.createDocument({
+          documentType: input.documentType,
+          fileName: input.fileName,
+          fileKey,
+          fileUrl: url,
+          mimeType: input.mimeType,
+          fileSize: buf.length,
+          propertyId: input.propertyId,
+          tenantId: input.tenantId,
+          ticketId: input.ticketId,
+          uploadedBy: ctx.user.id,
+        });
+      }),
+
+    list: protectedProcedure.query(async () => {
+      return await db.getAllDocuments();
+    }),
+
+    listByProperty: protectedProcedure
+      .input(z.object({ propertyId: z.number() }))
+      .query(async ({ input }) => {
+        return await db.getDocumentsByPropertyId(input.propertyId);
+      }),
+
+    getDownloadUrl: protectedProcedure
+      .input(z.object({ fileKey: z.string() }))
+      .query(async ({ input }) => {
+        // The stored fileUrl is short-lived; mint a fresh signed URL on demand.
+        return await DocumentStorageService.getDocument(input.fileKey);
       }),
   }),
 

@@ -523,6 +523,13 @@ export async function getDocumentsByType(documentType: Document['documentType'])
   return await db.select().from(documents).where(eq(documents.documentType, documentType));
 }
 
+// [trio] Stream 3 — list all documents for the Documents page
+export async function getAllDocuments() {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(documents).orderBy(desc(documents.createdAt));
+}
+
 // ============================================================================
 // Notification Management
 // ============================================================================
